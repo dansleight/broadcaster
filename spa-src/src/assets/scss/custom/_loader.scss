@@ -1,0 +1,26 @@
+.balls-bar {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+  animation: 1s linear infinite progress-bar-stripes;
+
+  @keyframes progress-bar-stripes {
+    0% {
+      background-position-x: 2rem;
+    }
+  }
+  .heavy-ball {
+    fill: var(--bs-success);
+  }
+  .light-ball {
+    fill: var(--bs-info);
+  }
+}

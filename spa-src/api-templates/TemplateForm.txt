@@ -1,0 +1,93 @@
+import { AutoForm, FormFieldError } from "../components/AutoForm";
+import { useSessionContext } from "../../contexts/UseContexts";
+import {
+  {PostObject},
+  HttpValidationError,
+  ValidationError,
+  {BaseObject},
+} from "../../apiClient/data-contracts";
+import { ReactElement, useEffect, useState } from "react";
+import {
+  {PostObject}Schema,
+  {PostObject}PropDefs,
+} from "../../apiClient/schemas";
+
+const default{PostObject}Values: {PostObject} = {} as {PostObject};
+
+type {FormName}Props = {
+  values?: {BaseObject} | {PostObject} | null;
+  onSuccess?: (data: {BaseObject}) => void;
+  onUnhandled?: (error: HttpValidationError | any) => void;
+  showCancel?: boolean;
+  cancelLabel?: string | ReactElement;
+  submitLabel?: string | ReactElement;
+  onCancel?: () => void;
+};
+
+export function {FormName}({
+  values,
+  onSuccess,
+  onUnhandled,
+  showCancel,
+  cancelLabel,
+  submitLabel,
+  onCancel,
+}: {FormName}Props) {
+  const { api } = useSessionContext();
+  const [defaultValues, setDefaultValues] = useState<{PostObject}>(
+    default{PostObject}Values
+  );
+  const [serverFieldErrors, setServerFieldErrors] = useState<
+    { field: string; message: string }[] | undefined
+  >(undefined);
+  const [resettingForm, setResettingForm] = useState<boolean>(false);
+
+  const resetForm = () => setResettingForm(true);
+
+  const handleSubmit = async (data: {PostObject}) => {
+    api
+      .{ApiMethod}(data)
+      .then((res) => {
+        setServerFieldErrors(undefined);
+        resetForm();
+        if (onSuccess) onSuccess(res.data);
+        else alert("Record created successfully!");
+      })
+      .badRequest((err) => {
+        const msgs: FormFieldError[] = [];
+        if (err.error.detail)
+          err.error.detail.forEach((validationError: ValidationError) => {
+            msgs.push(validationError as FormFieldError);
+          });
+        setServerFieldErrors(msgs);
+      })
+      .catch((error) => {
+        if (onUnhandled) onUnhandled(error);
+      });
+  };
+
+  useEffect(() => {
+    if (values) setDefaultValues(values as {PostObject});
+  }, [values]);
+
+  useEffect(() => {
+    if (resettingForm) setResettingForm(false);
+  }, [resetForm]);
+
+  return (
+    <>
+      {!resettingForm && (
+        <AutoForm
+          schema={{PostObject}Schema}
+          defaultValues={defaultValues}
+          onSubmit={handleSubmit}
+          showCancel={showCancel}
+          cancelLabel={cancelLabel}
+          submitLabel={submitLabel}
+          onCancel={onCancel}
+          propDefs={{PostObject}PropDefs}
+        />
+      )}
+    </>
+  );
+}

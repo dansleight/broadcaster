@@ -1,0 +1,22 @@
+.hmenu {
+  text-transform: uppercase;
+  &.hmenu-sm {
+    transform: scale(0.9);
+    transform-origin: left;
+  }
+  &.hmenu-xs {
+    transform: scale(0.8);
+    transform-origin: left;
+  }
+  .dropdown-menu {
+    li {
+      &.menu-title {
+        padding-left: var(--bs-dropdown-item-padding-x);
+        padding-right: var(--bs-dropdown-item-padding-x);
+        padding-top: var(--bs-dropdown-item-padding-y);
+        padding-bottom: var(--bs-dropdown-item-padding-y);
+        font-size: calc(var(--bs-dropdown-font-size) * 0.8);
+      }
+    }
+  }
+}

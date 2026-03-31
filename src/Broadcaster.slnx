@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Broadcaster.Business/Broadcaster.Business.csproj" />
+  <Project Path="Broadcaster.Stream/Broadcaster.Stream.csproj" />
+  <Project Path="Broadcaster/Broadcaster.csproj" />
+</Solution>

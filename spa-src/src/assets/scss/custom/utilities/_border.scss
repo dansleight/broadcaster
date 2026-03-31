@@ -1,0 +1,13 @@
+$positions: (
+  "start": "left",
+  "end": "right",
+  "top": "top",
+  "bottom": "bottom",
+);
+@each $color, $value in $theme-colors {
+  @each $position, $pos in $positions {
+    .border-#{$position}-#{$color} {
+      border-#{$pos}: 0.25rem solid $value !important;
+    }
+  }
+}

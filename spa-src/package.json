@@ -1,0 +1,86 @@
+{
+  "name": "bwbbroadcast",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build:release": "tsc -b && vite build --emptyOutDir --outDir=../src/client_app --base=/static/",
+    "build:validate": "tsc -b && vite build && rimraf --glob ./*.tsbuildinfo && rimraf --glob ./dist",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "update": "npm-check-updates --target minor -u && pnpm i && pnpm update",
+    "generate-api": "node generate-api.js",
+    "set-logo": "pnpm dlx tsx set-logo.ts"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "^5.4.0",
+    "@azure/msal-react": "^5.0.6",
+    "@fortawesome/fontawesome-common-types": "^7.2.0",
+    "@fortawesome/free-regular-svg-icons": "^7.2.0",
+    "@fortawesome/free-solid-svg-icons": "^7.2.0",
+    "@fortawesome/react-fontawesome": "^3.2.0",
+    "@hookform/resolvers": "^5.2.2",
+    "@metismenu/react": "^0.0.3",
+    "bootstrap": "^5.3.8",
+    "bootswatch": "^5.3.8",
+    "classnames": "^2.5.1",
+    "crypto-js": "^4.2.0",
+    "easymde": "^2.20.0",
+    "metismenujs": "^1.4.0",
+    "react": "^19.2.4",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "^19.2.4",
+    "react-hook-form": "^7.71.2",
+    "react-router-dom": "^7.13.1",
+    "react-use-cookie": "^1.6.1",
+    "simplebar-react": "^3.3.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/bootstrap": "^5.2.10",
+    "@types/crypto-js": "^4.2.2",
+    "@types/node": "^24.11.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "dotenv": "^17.3.1",
+    "eslint": "^10.0.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "inquirer": "^12.11.1",
+    "npm-check-updates": "^19.6.3",
+    "openapi-types": "^12.1.3",
+    "rimraf": "^6.1.3",
+    "sass": "^1.97.3",
+    "sharp": "^0.34.5",
+    "swagger-typescript-api": "13.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.56.1",
+    "vite": "^7.3.1"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": "10.30.3",
+      "onFail": "error"
+    }
+  },
+  "prettier": {
+    "overrides": [
+      {
+        "files": "routes.tsx",
+        "options": {
+          "printWidth": 200,
+          "arrowParens": "avoid"
+        }
+      }
+    ]
+  }
+}

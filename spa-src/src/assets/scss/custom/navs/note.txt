@@ -1,0 +1,220 @@
+
+  &.toggled {
+    width: 0 !important;
+    overflow: hidden;
+
+    li > a > svg {
+      margin: 0;
+    }
+
+    li > ul {
+      background-color: white;
+      border-radius: 10px;
+      padding: 10px;
+      position: absolute;
+      left: calc($sidebar-collapsed-width + 0.25rem);
+      top: 0;
+      text-align: left;
+      box-shadow: $box-shadow;
+      white-space: nowrap;
+
+      li.menu-title {
+        color: black;
+      }
+
+      :last-child {
+        margin-bottom: 0;
+      }
+
+      a {
+        display: block;
+        border-radius: 5px;
+        color: black;
+        text-align: left;
+        min-width: 8rem;
+
+        &:hover {
+          background-color: $gray-200;
+        }
+      }
+    }
+  }
+
+
+
+@include media-breakpoint-up(md) {
+  .sidebar {
+    width: $sidebar-base-width !important;
+
+    li {
+      // Accordion
+      .collapse {
+        position: relative;
+        left: 0;
+        z-index: 1;
+        top: 0;
+        animation: none;
+
+        .collapse-inner {
+          border-radius: 0;
+          box-shadow: none;
+        }
+      }
+
+      .collapsing {
+        display: block;
+        transition: $transition-collapse;
+      }
+
+      .collapse,
+      .collapsing {
+        margin: 0 1rem;
+      }
+
+      .nav-link,
+      a {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 1rem;
+        width: $sidebar-base-width;
+        text-transform: uppercase;
+        text-decoration: none;
+
+        svg {
+          margin-right: 0.5rem;
+        }
+
+        span {
+          font-size: 0.75rem;
+          display: inline;
+        }
+
+        // Accordion Arrow Icon
+        &[data-toggle="collapse"] {
+          position: relative;
+
+          &::after {
+            content: " ";
+            height: 0.8rem;
+            width: 0.8rem;
+            transform: rotate(90deg);
+            position: absolute;
+            top: 1.4rem;
+            right: 1rem;
+            background-repeat: no-repeat;
+            background-position-y: bottom;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='white' fill-opacity='0.5' d='M285.5 273L91.1 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.7-22.7c-9.4-9.4-9.4-24.5 0-33.9L188.5 256 34.5 101.3c-9.3-9.4-9.3-24.5 0-33.9l22.7-22.7c9.4-9.4 24.6-9.4 33.9 0L285.5 239c9.4 9.4 9.4 24.6 0 33.9z'/%3E%3C/svg%3E")
+              no-repeat 50% 50%;
+            background-size: contain;
+          }
+
+          &.collapsed::after {
+            transform: rotate(0deg);
+          }
+        }
+      }
+    }
+
+    &.toggled {
+      .nav-item {
+        .nav-link {
+          svg {
+            margin-right: 0;
+          }
+        }
+      }
+    }
+
+    .sidebar-brand {
+      .sidebar-brand-icon i {
+        font-size: 2rem;
+      }
+
+      .sidebar-brand-text {
+        display: inline;
+      }
+    }
+
+    .sidebar-heading,
+    .menu-title {
+      text-align: left;
+    }
+
+    &.toggled {
+      overflow: visible;
+      width: $sidebar-collapsed-width !important;
+
+      .nav-item,
+      li {
+        // Accordion
+        .collapse {
+          position: absolute;
+          left: calc(#{$sidebar-collapsed-width} + #{$grid-gutter-width} / 2);
+          z-index: 1;
+          top: 2px;
+          // Grow In Animation for Toggled State
+          animation-name: growIn;
+          animation-duration: 200ms;
+          animation-timing-function:
+            transform cubic-bezier(0.18, 1.25, 0.4, 1),
+            opacity cubic-bezier(0, 1, 0.4, 1);
+
+          .collapse-inner {
+            box-shadow: $box-shadow;
+            border-radius: $border-radius;
+          }
+        }
+
+        .collapsing {
+          display: none;
+          transition: none;
+        }
+
+        .collapse,
+        .collapsing {
+          margin: 0;
+        }
+
+        &:last-child {
+          margin-bottom: 1rem;
+        }
+
+        .nav-link,
+        a {
+          text-align: center;
+          padding: 0.75rem 1rem;
+          width: $sidebar-collapsed-width;
+
+          span {
+            font-size: 0.65rem;
+            display: block;
+          }
+
+          i {
+            margin-right: 0;
+          }
+
+          &[data-toggle="collapse"]::after {
+            display: none;
+          }
+        }
+      }
+
+      .sidebar-brand {
+        .sidebar-brand-icon i {
+          font-size: 2rem;
+        }
+
+        .sidebar-brand-text {
+          display: none;
+        }
+      }
+
+      .sidebar-heading,
+      .menu-title {
+        text-align: center;
+      }
+    }
+  }
+}

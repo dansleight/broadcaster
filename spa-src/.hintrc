@@ -1,0 +1,14 @@
+{
+  "extends": ["developoment"],
+  "hints": {
+    "axe/name-role-value": "off",
+    "typescript-config/consistent-casing": "off",
+    "no-inline-styles": "off"
+  },
+  "browserlist": [
+    "defaults",
+    "not ie 11",
+    "not and_ff <= 122",
+    "not firefox <= 123"
+  ]
+}

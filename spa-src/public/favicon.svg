@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<svg id="logo" data-name="layer_0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    style1 {
+      fill: black;
+    }
+    @media (prefers-color-scheme: dark) {
+      style1 {
+        fill: white;
+      }
+    }
+  </style>
+  <g id="logo_1" data-name="layer_1">
+    <g>
+      <path class="style1" data-name="part1" d="M 30 0 L 73 0 L 43 100 L 0 100 z M 77 10 L 97 10 L 73 90 L 53 90 z M 20 42 L 20 58 L 80 55 L 80 45 z"/>
+      <circle class="style1" cx="13" cy="13" r="11" />
+      <circle class="style1" cx="87" cy="82" r="5" />
+    </g>
+  </g>
+</svg>
