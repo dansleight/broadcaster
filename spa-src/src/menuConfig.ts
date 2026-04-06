@@ -1,4 +1,8 @@
-import { faGauge, faGears } from "@fortawesome/free-solid-svg-icons";
+import {
+  faGauge,
+  faGears,
+  faVolumeHigh,
+} from "@fortawesome/free-solid-svg-icons";
 import { MenuItem } from "./models/Interfaces";
 
 /*
@@ -29,11 +33,17 @@ const manage: MenuItem = {
   label: "Manage",
   icon: faGears,
 };
+const audio: MenuItem = {
+  path: "/audio",
+  label: "Audio",
+  icon: faVolumeHigh,
+};
 
 export const genericMenuBase: MenuItem[] = [
   dashboard,
   // preview,
   manage,
+  audio,
 ];
 
 export const sidebarMenuBase: MenuItem[] = genericMenuBase;

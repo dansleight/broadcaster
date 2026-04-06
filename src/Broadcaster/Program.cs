@@ -18,6 +18,10 @@ using Serilog.Events;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YamlDotNet.Serialization;
 using Broadcaster.Stream;
+using Broadcaster.Services;
+using Broadcaster.Hubs;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 namespace Broadcaster;
 
@@ -122,18 +126,18 @@ public class Program
         {
             options.AddPolicy(corsPolicyName, policy =>
             {
-                policy.SetIsOriginAllowed(origin =>
-                {
-                    if (origin.StartsWith("https://localhost:") || origin.StartsWith("http://localhost:"))
-                        return true;
-                    return false;
-                });
-                policy.AllowAnyMethod();
-                policy.AllowAnyHeader();
+                policy.SetIsOriginAllowed(origin => true)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials()
+                    .WithExposedHeaders("*");
             });
         });
 
-        services.AddControllers()
+        services.AddControllers(options =>
+        {
+            options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
+        })
             .ConfigureApiBehaviorOptions(options =>
             {
                 options.InvalidModelStateResponseFactory = context =>
@@ -147,7 +151,10 @@ public class Program
                 options.SerializerSettings.Converters.Add(new StringEnumConverter());
             });
 
-        services.AddSignalR();
+        services.AddSignalR().AddJsonProtocol(options =>
+        {
+            options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
 
         services.Configure<AppSettingsBase>(context.Configuration);
         services.Configure<DataAccessSettings>(context.Configuration);
@@ -182,6 +189,8 @@ public class Program
             s.LookForRegistries();
         });
 
+        _ = services.AddSingleton<IAudioLevelNotifier, SignalRAudioLevelNotifier>();
+        _ = services.AddSingleton<IStreamStateNotifier, SignalRStreamStateNotifier>();
         _ = services.AddSingleton<StreamManager>();
         _ = services.AddSingleton<Assembly[]>([
             Assembly.GetExecutingAssembly(),
@@ -250,6 +259,7 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
+        app.MapHub<AudioLevelHub>("/hub/audio-level");
         app.MapControllers();
 
         app.UseStaticFiles();
@@ -258,7 +268,7 @@ public class Program
         // If you are running them both during development, the Node.JS process doesn't stop with the debug session, you'll have to kill it yourself
         app.UseWhen(r => r != null && r.Request != null && r.Request.Path != null && r.Request.Path.Value != null
             && !r.Request.Path.Value.StartsWith("/api")
-            && !r.Request.Path.Value.StartsWith("/hub"), builder =>
+            && !r.Request.Path.Value.StartsWith("/hub/"), builder =>
         {
             builder.UseSpaStaticFiles();
             builder.UseSpa(spa =>

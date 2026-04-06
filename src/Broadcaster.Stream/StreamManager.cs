@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Broadcaster.Stream;
@@ -12,24 +13,52 @@ public class StreamManager : IAsyncDisposable
 {
     private readonly ILogger<StreamManager> _logger;
     private readonly BroadcastSettings _settings;
+    private readonly IAudioLevelNotifier _audioLevelNotifier;
+    private readonly IStreamStateNotifier _streamStateNotifier;
     private static string? _videoDeviceId;
     private static string? _audioDeviceId;
 
+    // Broadcast process
     private CancellationTokenSource? _currentCts;
     private CommandTask<CommandResult>? _currentTask;
-    private readonly SemaphoreSlim _lock = new(1, 1);
-    private readonly string _pidFile = "/tmp/bwb_ffmpeg.pid";
 
-    public StreamManager(ILogger<StreamManager> logger, IOptions<BroadcastSettings> settings)
+    // Preview process
+    private CancellationTokenSource? _previewCts;
+    private CommandTask<CommandResult>? _previewTask;
+
+    private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly SemaphoreSlim _previewLock = new(1, 1);
+    private readonly string _pidFile = "/tmp/bwb_ffmpeg.pid";
+    private static readonly Regex EbuRegex =
+        new(@"\[Parsed_ebur128_\d+ @ [^\]]+\]\s+t:\s+[\d.]+\s+TARGET:[-\d]+\s+LUFS\s+M:\s*(-?\d+\.?\d*)", RegexOptions.Compiled);
+
+    public StreamState StreamState { get; private set; } = StreamState.Idle;
+
+    public StreamManager(
+        ILogger<StreamManager> logger,
+        IOptions<BroadcastSettings> settings,
+        IAudioLevelNotifier audioLevelNotifier,
+        IStreamStateNotifier streamStateNotifier)
     {
         _logger = logger;
         _settings = settings.Value;
+        _audioLevelNotifier = audioLevelNotifier;
+        _streamStateNotifier = streamStateNotifier;
 
         // Fire-and-forget orphan cleanup on startup
         _ = ReclaimOrphanAsync();
     }
 
     #region Public Methods
+
+    public bool TestMatch()
+    {
+        // Quick sanity check — paste in a test
+        var line = "[Parsed_astats_2 @ 0x61c8933b8100] RMS level dB: -24.481038";
+        var match = EbuRegex.Match(line);
+        // match.Success should be true, match.Groups[1].Value should be "-24.481038"
+        return match.Success;
+    }
 
     public CommandTask<CommandResult>? GetCurrentTask()
     {
@@ -60,6 +89,7 @@ public class StreamManager : IAsyncDisposable
             .WithValidation(CommandResultValidation.None);
 
         await ReplaceCommandAsync(cmd);
+        await SetStateAsync(StreamState.Placeholder);
     }
 
     public async Task RunLiveVideoAsync(string? rtmpUrl = null)
@@ -72,67 +102,59 @@ public class StreamManager : IAsyncDisposable
         var v4l2 = Cli.Wrap("v4l2-ctl")
             .WithArguments(new[]
             {
-                "-d", videoDevice,
-                "--stream-mmap",
-                "--stream-to=-",
-                "--set-fmt-video=width=640,height=480,pixelformat=YUYV"
+            "-d", videoDevice,
+            "--set-fmt-video=width=640,height=480,pixelformat=MJPG",
+            "--set-parm=30",
+            "--stream-mmap",
+            "--stream-count=0",
+            "--stream-to=-"
             });
         _logger.LogInformation($"vrl2: {v4l2.ToString()}");
 
         var ffmpeg = Cli.Wrap("ffmpeg")
             .WithArguments(new[]
             {
-                "-hide_banner",
-                "-thread_queue_size", "1024",
+            "-hide_banner",
 
-                // Video Input
-                "-f", "rawvideo",
-                "-pixel_format", "yuyv422",
-                "-video_size", "640x480",
-                "-framerate", "30",
-                "-i", "pipe:0",
+            // Video Input
+            "-thread_queue_size", "4096",
+            "-f", "mjpeg",
+            "-use_wallclock_as_timestamps", "1",
+            "-framerate", "30",
+            "-i", "pipe:0",
 
-                // Audio Input
-                "-thread_queue_size", "1024",
-                "-f", "alsa",
-                "-i", audioDevice,
+            // Audio Input
+            "-thread_queue_size", "4096",
+            "-itsoffset", "0.74",
+            "-f", "alsa",
+            "-ar", "48000",
+            "-i", audioDevice,
 
-                // Video Encoding
-                "-c:v", "libx264", "-preset", "veryfast", "-tune", "zerolatency",
-                "-b:v", "1000k", "-maxrate", "1000k", "-bufsize", "1000k",
-                "-g", "30", "-keyint_min", "30",
+            // Video Encoding
+            "-vf", "format=yuv420p",
+            "-c:v", "libx264", "-preset", "veryfast", "-tune", "zerolatency", "-profile:v", "high",
+            "-b:v", "1000k", "-maxrate", "1000k", "-bufsize", "1000k",
+            "-g", "30", "-keyint_min", "30",
 
-                // Audio Encoding
-                "-c:a", "aac",
-                "-ac", "2",
-                "-ar", "48000",
-                "-b:a", "128k",
+            // Audio Encoding
+            //"-af", "alimiter=level_in=0.9:level_out=0.9:limit=0.8:attack=5:release=50,aresample=async=1,astats=measure_perchannel=none:reset=48000",
+            //"-af", "alimiter=level_in=0.9:level_out=0.9:limit=0.8:attack=5:release=50,aresample=async=1,astats=measure_perchannel=none:reset=1",
+            "-af", "alimiter=level_in=0.9:level_out=0.9:limit=0.8:attack=5:release=50,aresample=async=1,ebur128=peak=true",
+            "-c:a", "aac",
+            "-ac", "2",
+            "-ar", "48000",
+            "-b:a", "128k",
 
-                // Finish
-                "-f", "flv", rtmpUrl
+            // Output
+            "-f", "flv", rtmpUrl
             })
-            // .WithArguments(new[]
-            // {
-            //     "-hide_banner",
-            //     "-thread_queue_size", "512",
-            //     "-f", "rawvideo", "-pixel_format", "yuyv422", "-video_size", "640x480", "-framerate", "30",
-            //     "-i", "pipe:0",
-            //     "-thread_queue_size", "512",
-            //     "-f", "alsa", "-ac", "1", "-use_wallclock_as_timestamps", "1",
-            //     "-i", audioDevice,
-            //     "-c:v", "libx264", "-preset", "veryfast", "-tune", "zerolatency",
-            //     "-b:v", "1000k", "-maxrate", "1000k", "-bufsize", "1000k",
-            //     "-g", "30", "-keyint_min", "30",
-            //     "-c:a", "aac", "-ac", "2", "-b:a", "128k",
-            //     "-f", "flv", rtmpUrl
-            // })
             .WithStandardErrorPipe(PipeTarget.ToDelegate(LogFfmpegLine))
             .WithValidation(CommandResultValidation.None);
         _logger.LogInformation($"ffmpeg: {ffmpeg.ToString()}");
 
-        var pipeline = v4l2 | ffmpeg;   // ← still works exactly the same
-
+        var pipeline = v4l2 | ffmpeg;
         await ReplaceCommandAsync(pipeline);
+        await SetStateAsync(StreamState.Live);
     }
 
     public async Task StopAsync()
@@ -147,6 +169,7 @@ public class StreamManager : IAsyncDisposable
         {
             _lock.Release();
         }
+        await SetStateAsync(StreamState.Idle);
     }
 
     public async ValueTask DisposeAsync()
@@ -158,6 +181,12 @@ public class StreamManager : IAsyncDisposable
     #endregion
 
     #region Private Helpers
+
+    private async Task SetStateAsync(StreamState? streamState)
+    {
+        if (streamState.HasValue) StreamState = streamState.Value;
+        await _streamStateNotifier.NotifyAsync(StreamState);
+    }
 
     private async Task ReplaceCommandAsync(Command command)
     {
@@ -217,10 +246,19 @@ public class StreamManager : IAsyncDisposable
         }
     }
 
-    private void LogFfmpegLine(string line)
+    private int _ebur128Counter = 0;
+    private async Task LogFfmpegLine(string line)
     {
-        if (!string.IsNullOrWhiteSpace(line))
-            _logger.LogDebug("FFmpeg: {Line}", line);
+        _logger.LogDebug("FFmpeg: {Line}", line);
+
+        var match = EbuRegex.Match(line);
+        if (match.Success && double.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var db))
+        {
+            if (++_ebur128Counter % 5 != 0) return;
+
+            var level = Math.Clamp((db + 60.0) / 60.0, 0.0, 1.0);
+            await _audioLevelNotifier.NotifyAsync(level);
+        }
     }
 
     private async Task ReclaimOrphanAsync()

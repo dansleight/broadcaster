@@ -56,4 +56,8 @@
     <ProjectReference Include="../Broadcaster.Stream/Broadcaster.Stream.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Hubs/" />
+  </ItemGroup>
+
 </Project>

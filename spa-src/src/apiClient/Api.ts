@@ -28,12 +28,40 @@ export class Api<
    * No description
    *
    * @tags Broadcast
+   * @name BroadcastTest
+   * @request GET:/api/broadcast/test
+   */
+  broadcastTest = (params: RequestParams = {}) =>
+    this.request<boolean, any>({
+      path: `/api/broadcast/test`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Broadcast
+   * @name BroadcastAudioTest
+   * @request GET:/api/broadcast/audio-test
+   */
+  broadcastAudioTest = (params: RequestParams = {}) =>
+    this.request<boolean, any>({
+      path: `/api/broadcast/audio-test`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Broadcast
    * @name BroadcastGetCurrentTask
-   * @request GET:/api/Broadcast/current-task
+   * @request GET:/api/broadcast/current-task
    */
   broadcastGetCurrentTask = (params: RequestParams = {}) =>
     this.request<string, any>({
-      path: `/api/Broadcast/current-task`,
+      path: `/api/broadcast/current-task`,
       method: "GET",
       format: "json",
       ...params,
@@ -43,11 +71,11 @@ export class Api<
    *
    * @tags Broadcast
    * @name BroadcastSetPlaceholder
-   * @request GET:/api/Broadcast/set-placeholder/{usealt}
+   * @request GET:/api/broadcast/set-placeholder/{usealt}
    */
   broadcastSetPlaceholder = (usealt: boolean, params: RequestParams = {}) =>
     this.request<StreamStatusModel, any>({
-      path: `/api/Broadcast/set-placeholder/${usealt}`,
+      path: `/api/broadcast/set-placeholder/${usealt}`,
       method: "GET",
       format: "json",
       ...params,
@@ -57,11 +85,11 @@ export class Api<
    *
    * @tags Broadcast
    * @name BroadcastSetLive
-   * @request GET:/api/Broadcast/set-live
+   * @request GET:/api/broadcast/set-live
    */
   broadcastSetLive = (params: RequestParams = {}) =>
     this.request<StreamStatusModel, any>({
-      path: `/api/Broadcast/set-live`,
+      path: `/api/broadcast/set-live`,
       method: "GET",
       format: "json",
       ...params,
@@ -71,11 +99,11 @@ export class Api<
    *
    * @tags Broadcast
    * @name BroadcastStopAll
-   * @request DELETE:/api/Broadcast/stop-all
+   * @request DELETE:/api/broadcast/stop-all
    */
   broadcastStopAll = (params: RequestParams = {}) =>
     this.request<StreamStatusModel, any>({
-      path: `/api/Broadcast/stop-all`,
+      path: `/api/broadcast/stop-all`,
       method: "DELETE",
       format: "json",
       ...params,
@@ -85,13 +113,39 @@ export class Api<
    *
    * @tags Broadcast
    * @name BroadcastScheduleMeetings
-   * @request GET:/api/Broadcast/schedule-dummy
+   * @request GET:/api/broadcast/schedule-dummy
    */
   broadcastScheduleMeetings = (params: RequestParams = {}) =>
     this.request<StreamStatusModel, any>({
-      path: `/api/Broadcast/schedule-dummy`,
+      path: `/api/broadcast/schedule-dummy`,
       method: "GET",
       format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Preview
+   * @name PreviewPing
+   * @request POST:/api/preview/ping
+   */
+  previewPing = (params: RequestParams = {}) =>
+    this.request<void, any>({
+      path: `/api/preview/ping`,
+      method: "POST",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Preview
+   * @name PreviewGetMjpeg
+   * @request GET:/api/preview/mjpeg
+   */
+  previewGetMjpeg = (params: RequestParams = {}) =>
+    this.request<void, any>({
+      path: `/api/preview/mjpeg`,
+      method: "GET",
       ...params,
     });
   /**
@@ -100,11 +154,11 @@ export class Api<
    * @tags Settings
    * @name SettingsGet
    * @summary Gets the global settings necessary for the SPA to start, including MSAL settings for Authentication
-   * @request GET:/api/Settings
+   * @request GET:/api/settings
    */
   settingsGet = (params: RequestParams = {}) =>
     this.request<GlobalSettingsModel, any>({
-      path: `/api/Settings`,
+      path: `/api/settings`,
       method: "GET",
       format: "json",
       ...params,
@@ -114,12 +168,12 @@ export class Api<
    *
    * @tags Test
    * @name TestGet
-   * @request GET:/api/Test/{id}
+   * @request GET:/api/test/{id}
    * @secure
    */
   testGet = (id: number, params: RequestParams = {}) =>
     this.request<GoodModel, BadRequestModel>({
-      path: `/api/Test/${id}`,
+      path: `/api/test/${id}`,
       method: "GET",
       secure: true,
       format: "json",
@@ -130,12 +184,12 @@ export class Api<
    *
    * @tags Widget
    * @name WidgetGet
-   * @request GET:/api/Widget
+   * @request GET:/api/widget
    * @secure
    */
   widgetGet = (params: RequestParams = {}) =>
     this.request<WidgetObject[], any>({
-      path: `/api/Widget`,
+      path: `/api/widget`,
       method: "GET",
       secure: true,
       format: "json",
@@ -146,12 +200,12 @@ export class Api<
    *
    * @tags Widget
    * @name WidgetAdd
-   * @request POST:/api/Widget
+   * @request POST:/api/widget
    * @secure
    */
   widgetAdd = (data: AddWidgetModel, params: RequestParams = {}) =>
     this.request<WidgetObject, HttpValidationError>({
-      path: `/api/Widget`,
+      path: `/api/widget`,
       method: "POST",
       body: data,
       secure: true,
@@ -164,14 +218,14 @@ export class Api<
    *
    * @tags Widget
    * @name WidgetGet2
-   * @request GET:/api/Widget/{widgetId}
+   * @request GET:/api/widget/{widgetId}
    * @originalName widgetGet
    * @duplicate
    * @secure
    */
   widgetGet2 = (widgetId: number, params: RequestParams = {}) =>
     this.request<WidgetObject, any>({
-      path: `/api/Widget/${widgetId}`,
+      path: `/api/widget/${widgetId}`,
       method: "GET",
       secure: true,
       format: "json",

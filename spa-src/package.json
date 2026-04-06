@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:release": "tsc -b && vite build --emptyOutDir --outDir=../src/client_app --base=/static/",
+    "build:release": "tsc -b && vite build --emptyOutDir --outDir=../src/Broadcaster/bin/Debug/net10.0/ClientApp --base=/static/",
     "build:validate": "tsc -b && vite build && rimraf --glob ./*.tsbuildinfo && rimraf --glob ./dist",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -22,6 +22,7 @@
     "@fortawesome/react-fontawesome": "^3.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@metismenu/react": "^0.0.3",
+    "@microsoft/signalr": "^10.0.0",
     "bootstrap": "^5.3.8",
     "bootswatch": "^5.3.8",
     "classnames": "^2.5.1",

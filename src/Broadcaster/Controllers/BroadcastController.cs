@@ -12,14 +12,33 @@ namespace Broadcaster.Controllers
     {
         private readonly ILogger<BroadcastController> _logger;
         private readonly StreamManager _manager;
+        private readonly IAudioLevelNotifier _audioLevelNotifier;
 
         public BroadcastController(
             ILogger<BroadcastController> logger,
-            StreamManager manager
+            StreamManager manager,
+            IAudioLevelNotifier audioLevelNotifier
         )
         {
             _logger = logger;
             _manager = manager;
+            _audioLevelNotifier = audioLevelNotifier;
+        }
+
+        [HttpGet("test")]
+        [ProducesResponseType(typeof(bool), 200)]
+        public ActionResult Test()
+        {
+            bool res = _manager.TestMatch();
+            return Ok(res);
+        }
+
+        [HttpGet("audio-test")]
+        [ProducesResponseType(typeof(bool), 200)]
+        public async Task<ActionResult> AudioTest()
+        {
+            await _audioLevelNotifier.NotifyAsync(.5);
+            return Ok(true);
         }
 
         [HttpGet("current-task")]
