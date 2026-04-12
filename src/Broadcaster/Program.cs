@@ -20,6 +20,7 @@ using Broadcaster.Services;
 using Broadcaster.Hubs;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.Extensions.FileProviders;
 
 namespace Broadcaster;
 
@@ -254,9 +255,11 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapHub<AudioLevelHub>("/hub/audio-level");
-        app.MapHub<StatusHub>("/hub/status");
-        app.MapControllers();
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "ClientApp/dist")),
+            RequestPath = "/static"
+        });
 
         app.UseStaticFiles();
 
@@ -264,14 +267,20 @@ public class Program
         // If you are running them both during development, the Node.JS process doesn't stop with the debug session, you'll have to kill it yourself
         app.UseWhen(r => r != null && r.Request != null && r.Request.Path != null && r.Request.Path.Value != null
             && !r.Request.Path.Value.StartsWith("/api")
-            && !r.Request.Path.Value.StartsWith("/hub/"), builder =>
+            && !r.Request.Path.Value.StartsWith("/hub/"), spaApp =>
         {
-            builder.UseSpaStaticFiles();
-            builder.UseSpa(spa =>
+            spaApp.UseSpaStaticFiles();
+            spaApp.UseSpa(spa =>
             {
                 spa.Options.SourcePath = "ClientApp";
             });
         });
+
+        app.MapHub<AudioLevelHub>("/hub/audio-level");
+        app.MapHub<StatusHub>("/hub/status");
+        app.MapControllers();
+
+
     }
 
 }
