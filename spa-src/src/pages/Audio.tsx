@@ -1,7 +1,7 @@
 import { Button, Col, Container, Row } from "react-bootstrap";
 import { Headcrumb } from "../components/Headcrumb";
 import { useSessionContext } from "../contexts/UseContexts";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   HubConnection,
   HubConnectionBuilder,
@@ -12,15 +12,16 @@ import { webApiConfig } from "../appConfig";
 export function Audio() {
   const { getApiBearer } = useSessionContext();
   const [audioLevel, setAudioLevel] = useState<number>(0);
-  const [conn, setConn] = useState<HubConnection | undefined>(undefined);
+  const connRef = useRef<HubConnection | undefined>(undefined);
 
-  const closeConn = () => {
+  const closeConn = useCallback(() => {
+    const conn = connRef.current;
     if (conn) {
       conn.off("AudioLevel", setAudioLevel);
-      conn.stop();
-      setConn(undefined);
+      conn.stop().catch(console.error);
+      connRef.current = undefined;
     }
-  };
+  }, [setAudioLevel]);
 
   useEffect(() => {
     const signalRHubUri = webApiConfig.origin + "/hub/audio-level";
@@ -31,22 +32,20 @@ export function Audio() {
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Warning)
       .build();
-    setConn(newConn);
+
+    connRef.current = newConn;
+
+    newConn
+      .start()
+      .then(() => {
+        newConn.on("AudioLevel", setAudioLevel);
+      })
+      .catch((e) => console.error("SignalR Connection failed: ", e));
+
     return () => {
       closeConn();
     };
   }, []);
-
-  useEffect(() => {
-    if (conn) {
-      conn
-        .start()
-        .then(() => {
-          conn.on("AudioLevel", setAudioLevel);
-        })
-        .catch((e) => console.log("SignalR Connection failed: ", e));
-    }
-  }, [conn]);
 
   return (
     <Container fluid>

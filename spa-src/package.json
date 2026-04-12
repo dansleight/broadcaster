@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:release": "tsc -b && vite build --emptyOutDir --outDir=../src/Broadcaster/bin/Debug/net10.0/ClientApp --base=/static/",
+    "build:release": "tsc -b && vite build --emptyOutDir --outDir=../src/Broadcaster/ClientApp/dist --base=/static/",
     "build:validate": "tsc -b && vite build && rimraf --glob ./*.tsbuildinfo && rimraf --glob ./dist",
     "lint": "eslint .",
     "preview": "vite preview",

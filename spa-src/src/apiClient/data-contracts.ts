@@ -10,13 +10,10 @@
  * ---------------------------------------------------------------
  */
 
-export interface AddWidgetModel {
-  /**
-   * @minLength 1
-   * @maxLength 100
-   */
-  name: string;
-  description: string | null;
+export enum UserRole {
+  Admin = "Admin",
+  Tech = "Tech",
+  User = "User",
 }
 
 export interface BadRequestModel {
@@ -35,10 +32,6 @@ export interface GoodModel {
   name: string;
 }
 
-export interface HttpValidationError {
-  detail: ValidationError[] | null;
-}
-
 export interface MsalSettingsModel {
   clientId: string;
   authority: string;
@@ -46,18 +39,27 @@ export interface MsalSettingsModel {
   provider: string | null;
 }
 
+export interface PlaceholderObject {
+  /** @format int32 */
+  placeholderId: number;
+  unit: string | null;
+  name: string;
+}
+
+export interface SetPlaceholderModel {
+  /** @format int32 */
+  placeholderId: number;
+  /** @format int32 */
+  audioTrackId: number;
+}
+
 export interface StreamStatusModel {
   status: string;
 }
 
-export interface ValidationError {
-  field: string;
-  message: string;
-}
-
-export interface WidgetObject {
-  /** @format int32 */
-  widgetId: number;
+export interface UserObject {
+  email: string;
   name: string;
-  description: string | null;
+  units: string[];
+  roles: UserRole[];
 }

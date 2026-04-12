@@ -51,15 +51,6 @@ public class StreamManager : IAsyncDisposable
 
     #region Public Methods
 
-    public bool TestMatch()
-    {
-        // Quick sanity check — paste in a test
-        var line = "[Parsed_astats_2 @ 0x61c8933b8100] RMS level dB: -24.481038";
-        var match = EbuRegex.Match(line);
-        // match.Success should be true, match.Groups[1].Value should be "-24.481038"
-        return match.Success;
-    }
-
     public CommandTask<CommandResult>? GetCurrentTask()
     {
         return _currentTask;

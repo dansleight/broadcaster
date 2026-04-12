@@ -3,6 +3,7 @@ namespace Broadcaster.Business;
 public enum UserRole
 {
     Admin,
+    Tech,
     User
 }
 

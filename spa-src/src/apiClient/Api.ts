@@ -11,13 +11,13 @@
  */
 
 import {
-  AddWidgetModel,
   BadRequestModel,
   GlobalSettingsModel,
   GoodModel,
-  HttpValidationError,
+  PlaceholderObject,
+  SetPlaceholderModel,
   StreamStatusModel,
-  WidgetObject,
+  UserObject,
 } from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
@@ -28,41 +28,15 @@ export class Api<
    * No description
    *
    * @tags Broadcast
-   * @name BroadcastTest
-   * @request GET:/api/broadcast/test
-   */
-  broadcastTest = (params: RequestParams = {}) =>
-    this.request<boolean, any>({
-      path: `/api/broadcast/test`,
-      method: "GET",
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Broadcast
-   * @name BroadcastAudioTest
-   * @request GET:/api/broadcast/audio-test
-   */
-  broadcastAudioTest = (params: RequestParams = {}) =>
-    this.request<boolean, any>({
-      path: `/api/broadcast/audio-test`,
-      method: "GET",
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Broadcast
    * @name BroadcastGetCurrentTask
    * @request GET:/api/broadcast/current-task
+   * @secure
    */
   broadcastGetCurrentTask = (params: RequestParams = {}) =>
     this.request<string, any>({
       path: `/api/broadcast/current-task`,
       method: "GET",
+      secure: true,
       format: "json",
       ...params,
     });
@@ -71,12 +45,19 @@ export class Api<
    *
    * @tags Broadcast
    * @name BroadcastSetPlaceholder
-   * @request GET:/api/broadcast/set-placeholder/{usealt}
+   * @request POST:/api/broadcast/set-placeholder
+   * @secure
    */
-  broadcastSetPlaceholder = (usealt: boolean, params: RequestParams = {}) =>
+  broadcastSetPlaceholder = (
+    data: SetPlaceholderModel,
+    params: RequestParams = {},
+  ) =>
     this.request<StreamStatusModel, any>({
-      path: `/api/broadcast/set-placeholder/${usealt}`,
-      method: "GET",
+      path: `/api/broadcast/set-placeholder`,
+      method: "POST",
+      body: data,
+      secure: true,
+      type: ContentType.Json,
       format: "json",
       ...params,
     });
@@ -86,11 +67,13 @@ export class Api<
    * @tags Broadcast
    * @name BroadcastSetLive
    * @request GET:/api/broadcast/set-live
+   * @secure
    */
   broadcastSetLive = (params: RequestParams = {}) =>
     this.request<StreamStatusModel, any>({
       path: `/api/broadcast/set-live`,
       method: "GET",
+      secure: true,
       format: "json",
       ...params,
     });
@@ -100,11 +83,13 @@ export class Api<
    * @tags Broadcast
    * @name BroadcastStopAll
    * @request DELETE:/api/broadcast/stop-all
+   * @secure
    */
   broadcastStopAll = (params: RequestParams = {}) =>
     this.request<StreamStatusModel, any>({
       path: `/api/broadcast/stop-all`,
       method: "DELETE",
+      secure: true,
       format: "json",
       ...params,
     });
@@ -114,38 +99,139 @@ export class Api<
    * @tags Broadcast
    * @name BroadcastScheduleMeetings
    * @request GET:/api/broadcast/schedule-dummy
+   * @secure
    */
   broadcastScheduleMeetings = (params: RequestParams = {}) =>
     this.request<StreamStatusModel, any>({
       path: `/api/broadcast/schedule-dummy`,
       method: "GET",
+      secure: true,
       format: "json",
       ...params,
     });
   /**
    * No description
    *
-   * @tags Preview
-   * @name PreviewPing
-   * @request POST:/api/preview/ping
+   * @tags Info
+   * @name InfoGetUser
+   * @request GET:/api/info/User
+   * @secure
    */
-  previewPing = (params: RequestParams = {}) =>
-    this.request<void, any>({
-      path: `/api/preview/ping`,
-      method: "POST",
+  infoGetUser = (params: RequestParams = {}) =>
+    this.request<UserObject, any>({
+      path: `/api/info/User`,
+      method: "GET",
+      secure: true,
+      format: "json",
       ...params,
     });
   /**
    * No description
    *
-   * @tags Preview
-   * @name PreviewGetMjpeg
-   * @request GET:/api/preview/mjpeg
+   * @tags Info
+   * @name InfoGetUnits
+   * @request GET:/api/info/Units
+   * @secure
    */
-  previewGetMjpeg = (params: RequestParams = {}) =>
-    this.request<void, any>({
-      path: `/api/preview/mjpeg`,
+  infoGetUnits = (params: RequestParams = {}) =>
+    this.request<string[], any>({
+      path: `/api/info/Units`,
       method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Info
+   * @name InfoGetPlaceholders
+   * @request GET:/api/info/Placeholders
+   * @secure
+   */
+  infoGetPlaceholders = (params: RequestParams = {}) =>
+    this.request<PlaceholderObject[], any>({
+      path: `/api/info/Placeholders`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Info
+   * @name InfoGetUnitPlaceholders
+   * @request GET:/api/info/Placeholders/{unit}
+   * @secure
+   */
+  infoGetUnitPlaceholders = (unit: string, params: RequestParams = {}) =>
+    this.request<PlaceholderObject[], any>({
+      path: `/api/info/Placeholders/${unit}`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Placeholder
+   * @name PlaceholderGet
+   * @request GET:/api/placeholder
+   * @secure
+   */
+  placeholderGet = (params: RequestParams = {}) =>
+    this.request<PlaceholderObject[], any>({
+      path: `/api/placeholder`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Placeholder
+   * @name PlaceholderAdd
+   * @request POST:/api/placeholder
+   * @secure
+   */
+  placeholderAdd = (
+    query: {
+      Unit: string;
+      Name: string;
+    },
+    data: {
+      /** @format binary */
+      File: File;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<PlaceholderObject[], any>({
+      path: `/api/placeholder`,
+      method: "POST",
+      query: query,
+      body: data,
+      secure: true,
+      type: ContentType.FormData,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Placeholder
+   * @name PlaceholderGetForUnit
+   * @request GET:/api/placeholder/For/{unit}
+   * @secure
+   */
+  placeholderGetForUnit = (unit: string, params: RequestParams = {}) =>
+    this.request<PlaceholderObject[], any>({
+      path: `/api/placeholder/For/${unit}`,
+      method: "GET",
+      secure: true,
+      format: "json",
       ...params,
     });
   /**
@@ -166,6 +252,20 @@ export class Api<
   /**
    * No description
    *
+   * @tags Status
+   * @name StatusGet
+   * @request GET:/api/status
+   */
+  statusGet = (params: RequestParams = {}) =>
+    this.request<string, any>({
+      path: `/api/status`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
    * @tags Test
    * @name TestGet
    * @request GET:/api/test/{id}
@@ -174,58 +274,6 @@ export class Api<
   testGet = (id: number, params: RequestParams = {}) =>
     this.request<GoodModel, BadRequestModel>({
       path: `/api/test/${id}`,
-      method: "GET",
-      secure: true,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Widget
-   * @name WidgetGet
-   * @request GET:/api/widget
-   * @secure
-   */
-  widgetGet = (params: RequestParams = {}) =>
-    this.request<WidgetObject[], any>({
-      path: `/api/widget`,
-      method: "GET",
-      secure: true,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Widget
-   * @name WidgetAdd
-   * @request POST:/api/widget
-   * @secure
-   */
-  widgetAdd = (data: AddWidgetModel, params: RequestParams = {}) =>
-    this.request<WidgetObject, HttpValidationError>({
-      path: `/api/widget`,
-      method: "POST",
-      body: data,
-      secure: true,
-      type: ContentType.Json,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Widget
-   * @name WidgetGet2
-   * @request GET:/api/widget/{widgetId}
-   * @originalName widgetGet
-   * @duplicate
-   * @secure
-   */
-  widgetGet2 = (widgetId: number, params: RequestParams = {}) =>
-    this.request<WidgetObject, any>({
-      path: `/api/widget/${widgetId}`,
       method: "GET",
       secure: true,
       format: "json",

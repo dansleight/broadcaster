@@ -11,12 +11,10 @@ using Microsoft.OpenApi;
 using Newtonsoft.Json.Converters;
 using Broadcaster.Business;
 using Broadcaster.Business.Models.Config;
-using Broadcaster.Business.Services.RepoBases;
 using Serilog;
 using Serilog.AspNetCore;
 using Serilog.Events;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using YamlDotNet.Serialization;
 using Broadcaster.Stream;
 using Broadcaster.Services;
 using Broadcaster.Hubs;
@@ -157,7 +155,6 @@ public class Program
         });
 
         services.Configure<AppSettingsBase>(context.Configuration);
-        services.Configure<DataAccessSettings>(context.Configuration);
         services.Configure<BroadcastSettings>(context.Configuration.GetSection("Broadcast"));
 
         services.AddSpaStaticFiles(opt => opt.RootPath = "ClientApp/dist");
@@ -194,10 +191,8 @@ public class Program
         _ = services.AddSingleton<StreamManager>();
         _ = services.AddSingleton<Assembly[]>([
             Assembly.GetExecutingAssembly(),
-            Assembly.GetAssembly(typeof(WidgetObject))!
         ]);
 
-        services.AddScoped<BoundTableBinder>();
     }
 
     public static void Configure(WebApplication app, IWebHostEnvironment env, ConfigurationManager configuration)
@@ -260,6 +255,7 @@ public class Program
         app.UseAuthorization();
 
         app.MapHub<AudioLevelHub>("/hub/audio-level");
+        app.MapHub<StatusHub>("/hub/status");
         app.MapControllers();
 
         app.UseStaticFiles();

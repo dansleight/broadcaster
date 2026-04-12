@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Broadcaster.Business;
 
 namespace Broadcaster;
 
@@ -16,21 +17,17 @@ public class RoleMapping
 
     public static List<string> GetRolesFromClaims(IConfiguration configuration, IEnumerable<Claim> claims)
     {
-        List<RoleMapping>? mappings = configuration.GetSection("RoleMappings").Get<List<RoleMapping>>();
-        if (mappings == null)
-            return new();
+        string? email = claims.SingleOrDefault(c => c.Type == "preferred_username")?.Value;
+        email ??= claims.SingleOrDefault(c => c.Type == "email")?.Value;
+        string name = claims.SingleOrDefault(c => c.Type == "name")?.Value ?? "unknown";
 
-        List<string> claimsgroups = claims.Where(c => c.Type == "groups").Select(c => c.Value).ToList();
+        if (email == null) throw new UnauthorizedAccessException("No usable email claim provided by Identity Provider");
 
-        List<string> roles = new();
-        foreach (RoleMapping mapping in mappings)
-        {
-            foreach (string group in mapping.Groups)
-            {
-                if (claimsgroups.Contains(group)) roles.Add(mapping.Role);
-            }
-        }
-        return roles.Distinct().ToList();
+        UserObject user = UserStaticRepo.GetUserForAuth(configuration, email, name);
+        List<string> rolesAndUnits = user.Roles.Select(r => r.ToString()).ToList();
+        rolesAndUnits.AddRange(user.Units);
+
+        return rolesAndUnits;
     }
 
     #endregion

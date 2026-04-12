@@ -12,10 +12,7 @@ import { StreamStatusModel } from "../apiClient/data-contracts";
 
 export function Manage() {
   const { api } = useSessionContext();
-  // const [dummyWaiting, setDummyWaiting] = useState<boolean>(false);
-  // const [dummyStatus, setDummyStatus] = useState<
-  //   BroadcastActionResultModel | undefined
-  // >(undefined);
+
   const [statusWaiting, setStatusWaiting] = useState<boolean>(false);
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [previewWaiting, setPreviewWaiting] = useState<boolean>(false);
@@ -45,7 +42,7 @@ export function Manage() {
     clearMessages();
     setPreviewWaiting(true);
     api
-      .broadcastSetPlaceholder(false)
+      .broadcastSetPlaceholder({ placeholderId: 1, audioTrackId: 0 })
       .then((res) => {
         setPreviewStatus(res.data);
       })
@@ -56,7 +53,7 @@ export function Manage() {
     clearMessages();
     setPreviewWaiting(true);
     api
-      .broadcastSetPlaceholder(true)
+      .broadcastSetPlaceholder({ placeholderId: 2, audioTrackId: 0 })
       .then((res) => {
         setPreviewStatus(res.data);
       })
