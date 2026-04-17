@@ -286,6 +286,9 @@ public class StreamManager : IAsyncDisposable
 
     private async Task DetermineDevicesAsync()
     {
+        // make sure to install the tools: 
+        // $ sudo apt install v4l-utils alsa-utils ffmpeg
+
         // Video
         var vidRes = await Cli.Wrap("v4l2-ctl")
             .WithArguments(new[] { "--list-devices" })

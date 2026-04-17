@@ -68,7 +68,7 @@ public class UserObject
         );
         INSERT INTO dat_User (Email, Name, UnitsAsString, RolesAsString)
         VALUES
-            ('dan.sleight@eaglerock.net', 'Dan Sleight', 'West Stake', 'Super');
+            ('dan.sleight@eaglerock.net', 'Dan Sleight', 'West Stake', 'Admin');
         """;
 
     public static string InsertSql => """

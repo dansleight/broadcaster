@@ -18,7 +18,11 @@ public class UnitObject
             Unit        TEXT            PRIMARY KEY
         );
         INSERT INTO lu_Unit (Unit)
-        VALUES ('Stake');
+        VALUES 
+            ('West Stake'),
+            ('Brentwood'),
+            ('Taylor Crossing'),
+            ('Westhill');
         """;
 
     public static string InsertSql => """

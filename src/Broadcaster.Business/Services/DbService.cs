@@ -13,26 +13,30 @@ public class DbService
     private readonly string _connectionString;
     private readonly SqliteConnection _connection;
     private static bool _initChecked = false;
+    private static object _lock = new object();
 
     public DbService(IConfiguration config)
     {
         _connectionString = $"Data Source={GetDatabasePath(config)}";
         _connection = new SqliteConnection(_connectionString);
 
-        if (_initChecked != true)
+        lock (_lock)
         {
-            const string checkExistsSql = """
+            if (_initChecked != true)
+            {
+                const string checkExistsSql = """
                 SELECT name 
                 FROM sqlite_master 
                 WHERE type = 'table' 
                 """;
 
-            List<string> tables = _connection.Query<string>(checkExistsSql).ToList();
+                List<string> tables = _connection.Query<string>(checkExistsSql).ToList();
 
-            if (!tables.Contains("lu_Unit")) _connection.Execute(UnitObject.InitSql);
-            if (!tables.Contains("dat_Placeholder")) _connection.Execute(PlaceholderObject.InitSql);
-            if (!tables.Contains("dat_User")) _connection.Execute(UserObject.InitSql);
-            _initChecked = true;
+                if (!tables.Contains("lu_Unit")) _connection.Execute(UnitObject.InitSql);
+                if (!tables.Contains("dat_Placeholder")) _connection.Execute(PlaceholderObject.InitSql);
+                if (!tables.Contains("dat_User")) _connection.Execute(UserObject.InitSql);
+                _initChecked = true;
+            }
         }
     }
 
