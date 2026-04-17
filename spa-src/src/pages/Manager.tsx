@@ -44,6 +44,16 @@ export function Manager() {
       .finally(() => setStateChanging(false));
   };
 
+  const handleGoLive = () => {
+    setStateChanging(true);
+    api
+      .broadcastSetLive()
+      .then((res) => {
+        console.log(res);
+      })
+      .finally(() => setStateChanging(false));
+  };
+
   const handleStopAll = () => {
     setStateChanging(true);
     api
@@ -211,15 +221,6 @@ export function Manager() {
                 </Form.Select>
               </Form.Group>
             </Card.Body>
-            <Card.Footer>
-              <dl>
-                <dt>unit</dt>
-                <dd>{unit}</dd>
-
-                <dt>placeholderId</dt>
-                <dd>{placeholderId}</dd>
-              </dl>
-            </Card.Footer>
           </Card>
         </Col>
       </Row>
@@ -227,7 +228,10 @@ export function Manager() {
         <Col>
           <Card>
             <Card.Body>
-              <Button variant="danger" onClick={handleStopAll}>
+              <Button variant="success" className="me-2" onClick={handleGoLive}>
+                Go Live
+              </Button>
+              <Button variant="danger" className="me-2" onClick={handleStopAll}>
                 Stop
               </Button>
             </Card.Body>
