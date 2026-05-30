@@ -1,7 +1,9 @@
 using Broadcaster.Business;
+using Broadcaster.Common;
 using Broadcaster.SpaModels;
 using Broadcaster.Stream;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Broadcaster.Controllers;
@@ -13,46 +15,33 @@ public class BroadcastController : ControllerBase
 {
     private readonly ILogger<BroadcastController> _logger;
     private readonly StreamManager _manager;
-    private readonly PlaceholderService _placeholderService;
+    private readonly ArtifactHelper _artifactHelper;
 
     public BroadcastController(
         ILogger<BroadcastController> logger,
         StreamManager manager,
-        PlaceholderService placeholderService
+        PlaceholderService placeholderService,
+        ArtifactHelper artifactHelper
     )
     {
         _logger = logger;
         _manager = manager;
-        _placeholderService = placeholderService;
+        _artifactHelper = artifactHelper;
     }
 
     [HttpGet("current-task")]
-    [ProducesResponseType(typeof(string), 200)]
-    public ActionResult GetCurrentTask()
+    [ProducesResponseType(typeof(FullStreamState), 200)]
+    public ActionResult GetStreamState()
     {
-        var ct = _manager.GetCurrentTask();
+        FullStreamState fss = _manager.FullStreamState;
 
-        return Ok(ct?.ToString() ?? "none");
+        return Ok(fss);
     }
 
     [HttpPost("set-placeholder")]
     [ProducesResponseType(typeof(StreamStatusModel), 200)]
     public async Task<ActionResult> SetPlaceholder(SetPlaceholderModel model)
     {
-        PlaceholderObject? placeholder = await _placeholderService.GetAsync(model.PlaceholderId);
-        if (placeholder == null)
-            return NotFound();
-
-        if (!(User.IsInRole("Admin") || (!string.IsNullOrEmpty(placeholder.Unit) && User.IsInRole(placeholder.Unit))))
-            return Unauthorized();
-
-        var placeholderImage = await _placeholderService.GetImageAsync(model.PlaceholderId);
-        var image = Path.Combine("/var/lib/broadcaster", $"{placeholder.PlaceholderId}.jpg");
-        await System.IO.File.WriteAllBytesAsync(image, placeholderImage!);
-
-        var audio = "/var/lib/broadcaster/hymn-100-choir.mp3";
-        if (model.AudioTrackId % 2 == 1)
-            audio = "/var/lib/broadcaster/hymn-169.mp3";
 
         if (_manager is null)
         {
@@ -60,7 +49,7 @@ public class BroadcastController : ControllerBase
             return Ok(new { status = "there is no manager" });
         }
 
-        await _manager.RunPlaceholderAsync(image, audio, null);
+        await _manager.RunPlaceholderAsync(model.PlaceholderType.FilePath(), (model.MusicType ?? MusicType.Default).FileDirectory(), null);
         return Ok(new StreamStatusModel("placeholder started"));
     }
 

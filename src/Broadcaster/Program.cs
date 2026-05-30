@@ -21,6 +21,10 @@ using Broadcaster.Hubs;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.Graph.Models.Security;
+using Broadcaster.Common;
 
 namespace Broadcaster;
 
@@ -60,62 +64,98 @@ public class Program
     {
         // Identity with Microsoft EntraID
         // todo: see if I can have a development api key that doesn't require Entra for development
-        JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
-        services.AddAuthentication("Bearer")
-            .AddMicrosoftIdentityWebApi(context.Configuration.GetSection("EntraId"), JwtBearerDefaults.AuthenticationScheme, true)
-            .EnableTokenAcquisitionToCallDownstreamApi()
-            .AddMicrosoftGraph(context.Configuration.GetSection("DownstreamApi"))
-            .AddInMemoryTokenCaches();
+        // JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
-        _ = services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, o =>
-        {
-            JwtBearerEvents currentEvents = o.Events;
-            IConfiguration configuration = context.Configuration;
-
-            o.Events = new JwtBearerEvents
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
             {
-                OnChallenge = async context => await currentEvents.OnChallenge(context),
-                OnAuthenticationFailed = async context => await currentEvents.OnAuthenticationFailed(context),
-                OnForbidden = async context => await currentEvents.OnForbidden(context),
-                OnTokenValidated = async context =>
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    if (context.Principal == null)
-                    {
-                        throw new ArgumentNullException("TokenValidatedContext is null and cannot be.");
-                    }
-                    await currentEvents.OnTokenValidated(context);
-                    bool hasEmail = context.Principal?.Claims.Where(x => x.Type == "email").Any() ?? false;
-                    bool hasUpn = context.Principal?.Claims.Where(x => x.Type == "upn").Any() ?? false;
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = context.Configuration["Jwt:Issuer"],
+                    ValidAudience = context.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(context.Configuration["Jwt:SecurityKey"] ?? throw new InvalidOperationException("Jwt:SecurityKey is missing"))),
+                    ClockSkew = TimeSpan.Zero
+                };
 
-                    List<string> roles = RoleMapping.GetRolesFromClaims(configuration, context.Principal!.Claims);
-                    List<Claim> claims = context!.Principal!.Claims.ToList();
-                    foreach (string role in roles)
-                    {
-                        claims.Add(new Claim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", role));
-                    }
-
-                    context.Principal = new ClaimsPrincipal(
-                        new ClaimsIdentity(
-                            claims: claims,
-                            context!.Principal!.Identity!.AuthenticationType,
-                            hasEmail ? "email" : hasUpn ? "upn" : "unique_name",
-                            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"));
-                },
-                OnMessageReceived = async context =>
+                options.Events = new JwtBearerEvents
                 {
-                    await currentEvents.OnMessageReceived(context);
-                    var accessToken = context.Request.Query["access_token"];
-
-                    // If the request is for our hub...
-                    var path = context.HttpContext.Request.Path;
-                    if (!string.IsNullOrEmpty(accessToken))
+                    OnMessageReceived = context =>
                     {
-                        // read the token out of the query string
-                        context.Token = accessToken;
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+
+                        if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/signalr")))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    },
+
+                    OnAuthenticationFailed = context =>
+                    {
+                        Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+                        return Task.CompletedTask;
                     }
-                }
-            };
-        });
+                };
+            });
+
+        // _ = services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, o =>
+        // {
+        //     JwtBearerEvents currentEvents = o.Events;
+        //     IConfiguration configuration = context.Configuration;
+
+        //     o.Events = new JwtBearerEvents
+        //     {
+        //         OnChallenge = async context => await currentEvents.OnChallenge(context),
+        //         OnAuthenticationFailed = async context => await currentEvents.OnAuthenticationFailed(context),
+        //         OnForbidden = async context => await currentEvents.OnForbidden(context),
+        //         OnTokenValidated = async context =>
+        //         {
+        //             if (context.Principal == null)
+        //             {
+        //                 throw new ArgumentNullException("TokenValidatedContext is null and cannot be.");
+        //             }
+        //             await currentEvents.OnTokenValidated(context);
+        //             bool hasEmail = context.Principal?.Claims.Where(x => x.Type == "email").Any() ?? false;
+        //             bool hasUpn = context.Principal?.Claims.Where(x => x.Type == "upn").Any() ?? false;
+
+        //             List<string> roles = RoleMapping.GetRolesFromClaims(configuration, context.Principal!.Claims);
+        //             List<Claim> claims = context!.Principal!.Claims.ToList();
+        //             foreach (string role in roles)
+        //             {
+        //                 claims.Add(new Claim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", role));
+        //             }
+
+        //             context.Principal = new ClaimsPrincipal(
+        //                 new ClaimsIdentity(
+        //                     claims: claims,
+        //                     context!.Principal!.Identity!.AuthenticationType,
+        //                     hasEmail ? "email" : hasUpn ? "upn" : "unique_name",
+        //                     "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"));
+        //         },
+        //         OnMessageReceived = async context =>
+        //         {
+        //             await currentEvents.OnMessageReceived(context);
+        //             var accessToken = context.Request.Query["access_token"];
+
+        //             // If the request is for our hub...
+        //             var path = context.HttpContext.Request.Path;
+        //             if (!string.IsNullOrEmpty(accessToken))
+        //             {
+        //                 // read the token out of the query string
+        //                 context.Token = accessToken;
+        //             }
+        //         }
+        //     };
+        // });
+
+        services.AddSingleton<JwtTokenService>();
+        services.AddSingleton<GoogleYouTubeTokenService>();
 
         services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
 
@@ -190,6 +230,7 @@ public class Program
         _ = services.AddSingleton<IAudioLevelNotifier, SignalRAudioLevelNotifier>();
         _ = services.AddSingleton<IStreamStateNotifier, SignalRStreamStateNotifier>();
         _ = services.AddSingleton<StreamManager>();
+        _ = services.AddSingleton<ArtifactHelper>();
         _ = services.AddSingleton<Assembly[]>([
             Assembly.GetExecutingAssembly(),
         ]);

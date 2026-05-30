@@ -3,7 +3,7 @@ import { Headcrumb } from "../components/Headcrumb";
 import { useIdentityContext } from "../contexts/UseContexts";
 
 export function NotFound() {
-  const { name, username } = useIdentityContext();
+  const { user } = useIdentityContext();
 
   return (
     <Container fluid>
@@ -12,10 +12,10 @@ export function NotFound() {
         <Col>
           <dl>
             <dt>Name</dt>
-            <dd>{name}</dd>
+            <dd>{user.name}</dd>
 
-            <dt>User Name</dt>
-            <dd>{username}</dd>
+            <dt>Email</dt>
+            <dd>{user.email}</dd>
           </dl>
         </Col>
       </Row>

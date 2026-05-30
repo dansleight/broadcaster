@@ -1,4 +1,4 @@
-import { ComponentType, ReactNode, useEffect, useState } from "react";
+import { ComponentType, ReactNode, useEffect, useMemo, useState } from "react";
 import { GridBreakpoint, gridBreakpoints } from "../models/Enums";
 import { SettingsContext } from "./UseContexts";
 import useCookie from "react-use-cookie";
@@ -9,7 +9,7 @@ import React from "react";
 
 type SettingsProviderProps = {
   children: ReactNode;
-  messageWrapper?: ComponentType<{ children: ReactNode }>;
+  messageWrapper?: ComponentType<{ waiting?: boolean; children: ReactNode }>;
 };
 
 export function SettingsProvider({
@@ -48,12 +48,13 @@ export function SettingsProvider({
     }
   };
 
-  useEffect(() => {
-    // console.log(webApiConfig.origin);
-    const api = new Api({ baseUrl: webApiConfig.origin });
+  const noAuthApi = useMemo(() => {
+    return new Api({ baseUrl: webApiConfig.origin });
+  }, [webApiConfig]);
 
+  useEffect(() => {
     const getSettings = async () => {
-      api
+      noAuthApi
         .settingsGet()
         .then((res) => {
           setGlobalSettings(res.data);
@@ -66,7 +67,7 @@ export function SettingsProvider({
         });
     };
     getSettings();
-  }, []);
+  }, [webApiConfig]);
 
   useEffect(() => {
     setHtmlAttribute("data-bs-theme", darkMode ? "dark" : "light");
@@ -75,6 +76,7 @@ export function SettingsProvider({
   }, [darkMode]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (darkModeCookie === "true") setDarkMode(true);
     // establish some defaults for page loading
     // we could load the layoutConfig here and instantiate it, however
@@ -126,6 +128,7 @@ export function SettingsProvider({
         darkMode,
         setDarkMode,
         globalSettings,
+        noAuthApi,
       }}
     >
       {loaded === undefined ? (

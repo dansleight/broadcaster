@@ -346,53 +346,42 @@ export class ApiPromise<T, E> {
     );
   }
 
-  badRequest(
+  private handleSpecificStatus(
+    status: number,
     onRejected: (reason: HttpResponse<T, E>) => void,
   ): ApiPromise<T, E> {
     return new ApiPromise<T, E>((resolve, reject) => {
       this.promise
-        .catch((reason) => {
-          if (reason.status === 400) {
-            onRejected(reason);
-            resolve({} as HttpResponse<T, E>);
-          } else {
-            reject(reason);
-          }
-        })
-        .catch(reject);
+        .then(
+          resolve, // success path – just forward the original value
+          (reason: any) => {
+            if (reason?.status === status) {
+              onRejected(reason);
+              resolve({} as HttpResponse<T, E>); // keep your original "swallow" behavior
+            } else {
+              reject(reason);
+            }
+          },
+        )
+        .catch(reject); // safety net for any errors thrown inside onRejected
     });
+  }
+
+  // Now the public methods are one-liners and impossible to get wrong:
+  badRequest(
+    onRejected: (reason: HttpResponse<T, E>) => void,
+  ): ApiPromise<T, E> {
+    return this.handleSpecificStatus(400, onRejected);
   }
 
   unauthorized(
     onRejected: (reason: HttpResponse<T, E>) => void,
   ): ApiPromise<T, E> {
-    return new ApiPromise<T, E>((resolve, reject) => {
-      this.promise
-        .catch((reason) => {
-          if (reason.status === 401) {
-            onRejected(reason);
-            resolve({} as HttpResponse<T, E>);
-          } else {
-            reject(reason);
-          }
-        })
-        .catch(reject);
-    });
+    return this.handleSpecificStatus(401, onRejected);
   }
 
   notFound(onRejected: (reason: HttpResponse<T, E>) => void): ApiPromise<T, E> {
-    return new ApiPromise<T, E>((resolve, reject) => {
-      this.promise
-        .catch((reason) => {
-          if (reason.status === 404) {
-            onRejected(reason);
-            resolve({} as HttpResponse<T, E>);
-          } else {
-            reject(reason);
-          }
-        })
-        .catch(reject);
-    });
+    return this.handleSpecificStatus(404, onRejected);
   }
 
   catch<U>(onRejected: (reason: any) => U | PromiseLike<U>): ApiPromise<U, E> {

@@ -11,12 +11,16 @@
  */
 
 import {
+  AuthTokenResponse,
   BadRequestModel,
+  FullStreamState,
   GlobalSettingsModel,
   GoodModel,
+  GoogleCallbackRequest,
   PlaceholderObject,
   SetPlaceholderModel,
   StreamStatusModel,
+  TokenModel,
   UserObject,
 } from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
@@ -28,12 +32,12 @@ export class Api<
    * No description
    *
    * @tags Broadcast
-   * @name BroadcastGetCurrentTask
+   * @name BroadcastGetStreamState
    * @request GET:/api/broadcast/current-task
    * @secure
    */
-  broadcastGetCurrentTask = (params: RequestParams = {}) =>
-    this.request<string, any>({
+  broadcastGetStreamState = (params: RequestParams = {}) =>
+    this.request<FullStreamState, any>({
       path: `/api/broadcast/current-task`,
       method: "GET",
       secure: true,
@@ -107,6 +111,66 @@ export class Api<
       method: "GET",
       secure: true,
       format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags GoogleAuth
+   * @name GoogleAuthCallback
+   * @request POST:/api/auth/google/callback
+   */
+  googleAuthCallback = (
+    data: GoogleCallbackRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<AuthTokenResponse, any>({
+      path: `/api/auth/google/callback`,
+      method: "POST",
+      body: data,
+      type: ContentType.Json,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags GoogleAuth
+   * @name GoogleAuthRefresh
+   * @request GET:/api/auth/google/refresh
+   */
+  googleAuthRefresh = (params: RequestParams = {}) =>
+    this.request<AuthTokenResponse, any>({
+      path: `/api/auth/google/refresh`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags GoogleAuth
+   * @name GoogleAuthFixer
+   * @request GET:/api/auth/google/fixer
+   */
+  googleAuthFixer = (params: RequestParams = {}) =>
+    this.request<boolean, any>({
+      path: `/api/auth/google/fixer`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Image
+   * @name ImageImage
+   * @request GET:/api/image/{imageName}
+   */
+  imageImage = (imageName: string, params: RequestParams = {}) =>
+    this.request<void, any>({
+      path: `/api/image/${imageName}`,
+      method: "GET",
       ...params,
     });
   /**
@@ -266,6 +330,50 @@ export class Api<
   /**
    * No description
    *
+   * @tags Status
+   * @name StatusGetRefreshToken
+   * @request GET:/api/status/refresh-token
+   */
+  statusGetRefreshToken = (params: RequestParams = {}) =>
+    this.request<string, any>({
+      path: `/api/status/refresh-token`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Status
+   * @name StatusValidateRefreshToken
+   * @request POST:/api/status/validate-token
+   */
+  statusValidateRefreshToken = (data: TokenModel, params: RequestParams = {}) =>
+    this.request<boolean, any>({
+      path: `/api/status/validate-token`,
+      method: "POST",
+      body: data,
+      type: ContentType.Json,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Status
+   * @name StatusDbPath
+   * @request GET:/api/status/db-path
+   */
+  statusDbPath = (params: RequestParams = {}) =>
+    this.request<string, any>({
+      path: `/api/status/db-path`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
    * @tags Test
    * @name TestGet
    * @request GET:/api/test/{id}
@@ -274,6 +382,22 @@ export class Api<
   testGet = (id: number, params: RequestParams = {}) =>
     this.request<GoodModel, BadRequestModel>({
       path: `/api/test/${id}`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Test
+   * @name TestNotify
+   * @request GET:/api/test/notify/{message}
+   * @secure
+   */
+  testNotify = (message: string, params: RequestParams = {}) =>
+    this.request<boolean, any>({
+      path: `/api/test/notify/${message}`,
       method: "GET",
       secure: true,
       format: "json",

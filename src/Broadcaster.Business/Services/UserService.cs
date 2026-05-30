@@ -18,67 +18,53 @@ public class UserService
         _conn = dbService.Conn;
     }
 
-    public async Task<List<UserObject>> ListAsync()
-    {
-        return (await _conn.QueryAsync<UserObject>(UserObject.ListSql)).ToList();
-    }
+    public Task<IEnumerable<UserObject>> ListAsync()
+        => _conn.QueryAsync<UserObject>(UserObject.ListSql);
 
-    public async Task<UserObject?> GetAsync(string email)
-    {
-        return (await _conn.QueryAsync<UserObject>(UserObject.GetSql, new { email })).FirstOrDefault();
-    }
 
-    public async Task InsertAsync(UserObject user, byte[] fileContent)
-    {
-        await _conn.ExecuteAsync(UserObject.InsertSql, user);
-    }
+    public Task<UserObject?> GetAsync(string googleSub)
+        => _conn.QuerySingleOrDefaultAsync<UserObject>(UserObject.GetSql, new { googleSub });
+
+
+    public Task<UserObject?> GetByEmailAsync(string email)
+        => _conn.QuerySingleOrDefaultAsync<UserObject>(UserObject.GetByEmailSql, new { email });
+
+
+    public Task InsertAsync(UserObject user, byte[] fileContent)
+        => _conn.ExecuteAsync(UserObject.InsertSql, user);
 
     public Task DeleteAsync(UserObject user) => DeleteAsync(user.Email);
 
-    public async Task DeleteAsync(string email)
+    public Task DeleteAsync(string email)
+        => _conn.ExecuteAsync(UserObject.DeleteSql, new { email });
+
+    public async Task<UserObject> GetOrCreateUserAsync(string googleSub, string email, string name, string? givenName, string? familyName, string? picture, string refreshToken)
     {
-        await _conn.ExecuteAsync(UserObject.DeleteSql, new { email });
+        UserObject? user = await _conn.QuerySingleOrDefaultAsync<UserObject>(UserObject.GetSql, new { googleSub });
+        if (user == null)
+        {
+            user = new UserObject(googleSub, email, name, givenName, familyName, picture);
+            await _conn.ExecuteAsync(UserObject.InsertSql, user);
+        }
+        else
+        {
+            if (user.Email != email
+                || user.Name != name
+                || user.GivenName != givenName
+                || user.FamilyName != familyName
+                || user.Picture != picture)
+            {
+                user.Email = email;
+                user.Name = name;
+                user.GivenName = givenName ?? user.GivenName;
+                user.FamilyName = familyName ?? user.FamilyName;
+                user.Picture = picture ?? user.Picture;
+                await _conn.ExecuteAsync(UserObject.UpdateSql, user);
+            }
+        }
+        await _conn.ExecuteAsync(UserObject.SaveRefreshTokenSql, new { googleSub, refreshToken });
+        return user;
     }
 
 }
 
-public static class UserStaticRepo
-{
-    private static Dictionary<string, UserObject>? _users;
-    private static DateTime _lastCheck = DateTime.MinValue;
-
-    public static UserObject GetUserForAuth(IConfiguration config, string email, string name = "unknown")
-    {
-        DbService? dbService = null;
-
-        if (_users == null || _lastCheck.AddHours(1) > DateTime.Now)
-        {
-            dbService = new DbService(config);
-
-            List<UserObject> users = dbService.Conn.Query<UserObject>(UserObject.ListSql).ToList();
-            _users = users.ToDictionary(u => u.Email);
-            _lastCheck = DateTime.Now;
-        }
-
-        if (_users.TryGetValue(email, out UserObject? user))
-            return user!;
-
-        // the user isn't in the cache
-        if (dbService == null)
-        {
-            dbService = new DbService(config);
-        }
-
-        user = dbService.Conn.Query<UserObject>(UserObject.GetSql, new { email }).SingleOrDefault();
-        if (user != null)
-        {
-            _users.Add(user.Email, user);
-            return user;
-        }
-        // add the user with no entitlements
-        UserObject newUser = new UserObject(email, name);
-        dbService.Conn.Execute(UserObject.InsertSql, newUser);
-        _users.Add(newUser.Email, newUser);
-        return newUser;
-    }
-}

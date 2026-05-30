@@ -14,8 +14,6 @@
     "set-logo": "pnpm dlx tsx set-logo.ts"
   },
   "dependencies": {
-    "@azure/msal-browser": "^5.4.0",
-    "@azure/msal-react": "^5.0.6",
     "@fortawesome/fontawesome-common-types": "^7.2.0",
     "@fortawesome/free-regular-svg-icons": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
@@ -23,6 +21,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@metismenu/react": "^0.0.3",
     "@microsoft/signalr": "^10.0.0",
+    "@react-oauth/google": "^0.13.5",
     "bootstrap": "^5.3.8",
     "bootswatch": "^5.3.8",
     "classnames": "^2.5.1",

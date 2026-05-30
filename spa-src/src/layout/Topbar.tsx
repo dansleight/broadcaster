@@ -1,13 +1,17 @@
-import { useSettingsContext } from "../contexts/UseContexts";
+import { useSessionContext, useSettingsContext } from "../contexts/UseContexts";
 import { UserInfo } from "./horizontalcomponents/UserInfo";
 import { LightDarkMode } from "./horizontalcomponents/LightDarkMode";
 import { layoutConfig } from "../layoutConfig";
 import classNames from "classnames";
 import { useMemo } from "react";
 import { Brand } from "./horizontalcomponents/Brand";
+import { StreamState } from "../apiClient/data-contracts";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faImage, faPlay } from "@fortawesome/free-solid-svg-icons";
 
 export const Topbar = () => {
   const { darkMode } = useSettingsContext();
+  const { streamState } = useSessionContext();
 
   const topbarClass = useMemo(() => {
     if (!darkMode) return layoutConfig.topbarTheme;
@@ -50,6 +54,24 @@ export const Topbar = () => {
       {layoutConfig.includeSidebar && layoutConfig.sidebarFull && (
         <div style={{ width: "1rem" }}></div>
       )}
+
+      <div className="ms-3">
+        {streamState.streamState == StreamState.Idle ? (
+          <h3 className="text-secondary">Idle</h3>
+        ) : streamState.streamState == StreamState.Live ? (
+          <h3 className="text-success">
+            <FontAwesomeIcon icon={faPlay} beat />
+            {" Live"}
+          </h3>
+        ) : streamState.streamState == StreamState.Placeholder ? (
+          <h3 className="text-primary">
+            <FontAwesomeIcon icon={faImage} beat />
+            Phld: {streamState.placeholderImage?.replace(".jpg", "")}
+          </h3>
+        ) : (
+          <h3 className="text-danger">Unknown Stream State</h3>
+        )}
+      </div>
 
       {/* Right Nav */}
       <ul className="navbar-nav ms-auto">

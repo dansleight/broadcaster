@@ -1,145 +1,122 @@
-import { useMsal } from "@azure/msal-react";
-import { ComponentType, ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { loginRequest } from "../appConfig";
-import React from "react";
+import React, {
+  ComponentType,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useGoogleLogin } from "@react-oauth/google";
 import { IdentityContext, useSettingsContext } from "./UseContexts";
-import { RedirectRequest } from "@azure/msal-browser";
-import { IsMs } from "../Utils/GlobalSettingsHelper";
+import { UserObject } from "../apiClient/data-contracts";
+import { Button } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faG } from "@fortawesome/free-solid-svg-icons";
 
 type IdentityProviderProps = {
   children: ReactNode;
-  messageWrapper?: ComponentType<{ children: ReactNode }>;
+  messageWrapper?: ComponentType<{ waiting?: boolean; children: ReactNode }>;
 };
 
 export const IdentityProvider = ({
   children,
   messageWrapper,
 }: IdentityProviderProps) => {
-  const { globalSettings } = useSettingsContext();
-  const msal = useMsal();
-  const { accounts, instance } = msal;
-  const [waiting, setWaiting] = useState<boolean>(true);
-  const [redirecting, setRedirecting] = useState<boolean | undefined>(
-    undefined,
-  );
-  // const [name, setName] = useState<string>("unknown");
-  // const [username, setUsername] = useState<string>("unknown");
-  const effectCalled = useRef<boolean>(false);
+  const { noAuthApi } = useSettingsContext();
+  const [waiting, setWaiting] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const effectCalled = useRef(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [user, setUser] = useState<UserObject | undefined>(undefined);
 
-  // if (
-  //   instance.getActiveAccount() === null &&
-  //   instance.getAllAccounts().length > 0
-  // ) {
-  //   instance.setActiveAccount(instance.getAllAccounts()[0]);
-  // }
-
-  const handleLogin = () => {
-    const scopes: string[] = [];
-    const redirectParams: RedirectRequest = {
-      scopes: scopes,
-      redirectUri: document.location.origin,
-    };
-    if (IsMs(globalSettings)) {
-      // since this is Entra, we're going to:
-      // 1) set the scope so we can read user info
-      // 2) force a particular workflow
-      redirectParams.scopes = loginRequest.scopes;
-      redirectParams.extraQueryParameters = { msafed: "0" };
-    } else {
-      // since this isn't Entra, we're going to
-      // set the scopes from globalSettings
-      redirectParams.scopes = [globalSettings.msalSettings!.apiScope];
+  const handleLoginSuccess = (codeResponse: { code: string }) => {
+    try {
+      noAuthApi
+        .googleAuthCallback({ code: codeResponse.code })
+        .then((res) => {
+          setAuthToken(res.data.accessToken);
+          console.log("✅ Logged in - token stored");
+          setUser(res.data.user);
+        })
+        .catch((err) => {
+          throw new Error(`Backend error: ${err.error}`);
+        })
+        .finally(() => {});
+    } catch (err: any) {
+      console.error("❌ Login failed:", err);
+      setError(err);
     }
-    console.log("redirectParams: ", redirectParams);
-    instance.loginRedirect(redirectParams).catch((e) => {
-      console.error(e);
-    });
   };
 
-  const getAccount = () => {
-    if (!instance.getActiveAccount()) {
-      if (instance.getAllAccounts().length > 0)
-        instance.setActiveAccount(instance.getAllAccounts()[0]);
-    }
-    return instance.getActiveAccount()!;
-  }
+  const login = useGoogleLogin({
+    flow: "auth-code",
+    scope: "openid email profile https://www.googleapis.com/auth/youtube",
+    ux_mode: "popup", // "popup" is usually smoother; change to "redirect" if you prefer
+    onSuccess: handleLoginSuccess, // Pass the function directly
+    redirect_uri: "http://localhost:3034",
+    onError: (error) => {
+      console.error("Google login error:", error);
+    },
+  });
 
-  const handleLogout = () => {
-    // if you are creating an appliation that is "internal" the logout redirect could be useless and annoying, so, we can also just clear out the session data and start over
-    localStorage.clear();
-    sessionStorage.clear();
-    document.location.replace("about://blank");
-    // instance.logoutRedirect({
-    //   postLogoutRedirectUri: "/",
-    // });
-  };
-
-  const name = useMemo(() => {
-    if (accounts.length > 0) {
-      return accounts[0].name ?? accounts[0].username;
-    }
-    return "unknown";
-  }, [accounts]);
-
-  const username = useMemo(() => {
-    if (accounts.length > 0) {
-      return accounts[0].username;
-    }
-    return "unknown";
-  }, [accounts]);
-
-  // so, here, we are going to automatically log the user in, remove this entire section to handle login via the handleLogin call
   useEffect(() => {
     if (effectCalled.current) return;
     effectCalled.current = true;
-    const waitForRedirectPromise = async () => {
-      // the instance is initalized here, no issues
-      instance.handleRedirectPromise().then((res) => {
-        if (res !== null) {
-          setRedirecting(false);
-        } else {
-          // getting null here doesn't seem to indicate the user isn't logged in
-          // things behave better here if we wait a second
-          setTimeout(() => {
-            const currentAccounts = instance.getAllAccounts();
-            if (!currentAccounts || currentAccounts.length < 1) {
-              setRedirecting(true);
-              setTimeout(handleLogin, 500);
-            } else {
-              setRedirecting(false);
-            }
-          }, 1000);
-        }
-      });
-    };
 
-    instance.initialize().then(() => {
-      waitForRedirectPromise().then(() => {
+    // going to see if we can just get a jwt token based on the http-only cookie
+    console.info(
+      "attempting to get a jwt token based on existing refresh token",
+    );
+    noAuthApi
+      .googleAuthRefresh()
+      .then((res) => {
+        setAuthToken(res.data.accessToken);
+        setUser(res.data.user);
+      })
+      .unauthorized(() => {
+        console.info(
+          "failed to get a jwt token based on existing refresh token",
+        );
+        // do nothing, we'll fall into a login with google scenario.
+      })
+      .finally(() => {
+        console.info("hit the finally block, turning off waiting...");
         setWaiting(false);
       });
-    });
   }, []);
 
   const Wrapper = messageWrapper ?? React.Fragment;
 
   return (
     <>
-      {waiting || redirecting === undefined ? (
+      {waiting ? (
         <Wrapper>
           <em>Getting ready...</em>
         </Wrapper>
-      ) : redirecting ? (
-        <Wrapper>
-          <em>Redirecting to Sign-in...</em>
+      ) : error ? (
+        <Wrapper waiting={false}>
+          <em>{error}</em>
+        </Wrapper>
+      ) : authToken === null || user === undefined ? (
+        <Wrapper waiting={false}>
+          <p>
+            <em>You are not logged in.</em>
+          </p>
+          <Button variant="danger" onClick={login}>
+            <FontAwesomeIcon icon={faG} />
+            {" Log In with Google"}
+          </Button>
         </Wrapper>
       ) : (
         <IdentityContext.Provider
           value={{
-            handleLogin,
-            handleLogout,
-            getAccount,
-            name,
-            username,
+            handleLogout: () => {
+              localStorage.clear();
+              sessionStorage.clear();
+              document.location.replace("about://blank");
+            },
+            user: user,
+            authToken: authToken,
+            setAuthToken: setAuthToken,
           }}
         >
           {children}

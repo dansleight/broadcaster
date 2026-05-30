@@ -7,8 +7,12 @@ public class UserObject
 {
     #region Properties
 
+    public string GoogleSub { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string Name { get; set; } = null!;
+    public string? GivenName { get; set; }
+    public string? FamilyName { get; set; }
+    public string? Picture { get; set; }
     public List<string> Units { get; set; } = new();
     public List<UserRole> Roles { get; set; } = new();
 
@@ -49,10 +53,20 @@ public class UserObject
 
     internal UserObject() { }
 
-    public UserObject(string email, string name)
+    public UserObject(
+        string googleSub,
+        string email,
+        string name,
+        string? givenName = null,
+        string? familyName = null,
+        string? picture = null)
     {
+        GoogleSub = googleSub;
         Email = email;
         Name = name;
+        GivenName = givenName;
+        FamilyName = familyName;
+        Picture = picture;
     }
 
     #endregion
@@ -61,36 +75,68 @@ public class UserObject
 
     public static string InitSql => """
         CREATE TABLE dat_User (
-            Email           TEXT        PRIMARY KEY,
+            GoogleSub       TEXT        PRIMARY KEY,
+            Email           TEXT        NOT NULL,
             Name            TEXT        NOT NULL,
+            GivenName       TEXT        NULL,
+            FamilyName      TEXT        NULL,
+            Picture         TEXT        NULL,
             UnitsAsString   TEXT        NOT NULL,
-            RolesAsString   TEXT        NOT NULL
+            RolesAsString   TEXT        NOT NULL,
+            RefreshToken    TEXT        NULL
         );
-        INSERT INTO dat_User (Email, Name, UnitsAsString, RolesAsString)
-        VALUES
-            ('dan.sleight@eaglerock.net', 'Dan Sleight', 'West Stake', 'Admin');
         """;
 
     public static string InsertSql => """
-        INSERT INTO dat_User (Email, UnitsAsString, RolesAsString)
-        VALUES (@Email, @UnitsAsString, @RolesAsString)
+        INSERT INTO dat_User (GoogleSub, Email, Name, GivenName, FamilyName, Picture, UnitsAsString, RolesAsString)
+        VALUES (@GoogleSub, @Email, @Name, @GivenName, @FamilyName, @Picture, @UnitsAsString, @RolesAsString)
+        """;
+
+    public static string UpdateSql => """
+        UPDATE  dat_User
+        SET     Email = @Email,
+                Name = @Name,
+                GivenName = @GivenName,
+                FamilyName = @FamilyName,
+                Picture = @Picture,
+                UnitsAsString = @UnitsAsString,
+                RolesAsString = @RolesAsString
+        WHERE   GoogleSub = @GoogleSub
         """;
 
     public static string ListSql => """
-        SELECT  *
+        SELECT  GoogleSub, Email, Name, GivenName, FamilyName, Picture, UnitsAsString, RolesAsString
         FROM    dat_User
         ORDER BY Name
         """;
 
     public static string GetSql => """
-        SELECT  *
+        SELECT  GoogleSub, Email, Name, GivenName, FamilyName, Picture, UnitsAsString, RolesAsString
+        FROM    dat_User
+        WHERE   GoogleSub = @googleSub
+        """;
+
+    public static string GetByEmailSql => """
+        SELECT  GoogleSub, Email, Name, GivenName, FamilyName, Picture, UnitsAsString, RolesAsString
         FROM    dat_User
         WHERE   Email = @email
         """;
 
     public static string DeleteSql => """
         DELETE FROM dat_User
-        WHERE   Email = @email
+        WHERE   GoogleSub = @googleSub
+        """;
+
+    public static string SaveRefreshTokenSql => """
+        UPDATE  dat_User
+        SET     RefreshToken = @refreshToken
+        WHERE   GoogleSub = @googleSub
+        """;
+
+    public static string GetRefreshTokenSql => """
+        SELECT  RefreshToken
+        FROM    dat_User
+        WHERE   GoogleSub = @googleSub
         """;
 
     #endregion

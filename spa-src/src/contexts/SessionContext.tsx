@@ -1,16 +1,27 @@
-import { useMsal } from "@azure/msal-react";
 import React, {
   ComponentType,
   ReactNode,
+  useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Api } from "../apiClient/Api";
 import { webApiConfig } from "../appConfig";
-import { SilentRequest } from "@azure/msal-browser";
-import { SessionContext, useIdentityContext, useSettingsContext } from "./UseContexts";
+import {
+  SessionContext,
+  useIdentityContext,
+  useSettingsContext,
+} from "./UseContexts";
 import { Button, Modal } from "react-bootstrap";
 import classNames from "classnames";
+import {
+  HubConnection,
+  HubConnectionBuilder,
+  LogLevel,
+} from "@microsoft/signalr";
+import { FullStreamState, StreamState } from "../apiClient/data-contracts";
 
 type SessionProviderProps = {
   children: ReactNode;
@@ -22,8 +33,6 @@ export function SessionProvider({
   messageWrapper,
 }: SessionProviderProps) {
   const { globalSettings } = useSettingsContext();
-  const { getAccount } = useIdentityContext();
-  const { instance } = useMsal();
   const [showApiError, setShowApiError] = useState<boolean>(false);
   const [apiErrorMessage, setApiErrorMessage] = useState<string>("");
   const [apiErrorDetails, setApiErrorDetails] = useState<string | undefined>(
@@ -31,6 +40,11 @@ export function SessionProvider({
   );
   const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);
   const [severeError, setSevereError] = useState<boolean>(false);
+  const { authToken } = useIdentityContext();
+  const connRef = useRef<HubConnection | undefined>(undefined);
+  const [streamState, setStreamState] = useState<FullStreamState>({
+    streamState: StreamState.Idle,
+  } as FullStreamState);
 
   const handleErrorModalClose = () => {
     setShowApiError(false);
@@ -78,45 +92,75 @@ export function SessionProvider({
   };
 
   const getApiBearer = async () => {
-    await instance.initialize();
-    const request: any = {
-      scopes: [globalSettings.msalSettings!.apiScope],
-      accounts: getAccount()
-    };
-    const authenticationResult = await instance
-      .acquireTokenSilent(request as SilentRequest)
-      .catch((e: any) => {
-        console.error(e);
-      });
-    if (authenticationResult) return authenticationResult!.accessToken;
+    // await instance.initialize();
+    // const request: any = {
+    //   scopes: [globalSettings.msalSettings!.apiScope],
+    //   accounts: getAccount()
+    // };
+    // const authenticationResult = await instance
+    //   .acquireTokenSilent(request as SilentRequest)
+    //   .catch((e: any) => {
+    //     console.error(e);
+    //   });
+    // if (authenticationResult) return authenticationResult!.accessToken;
     return undefined;
   };
 
   const api: Api | undefined = useMemo(() => {
-    if (!instance) return undefined;
-    return new Api({
-        baseUrl: webApiConfig.origin,
-        securityWorker: async () => {
-          const request: any = {
-            scopes: [globalSettings.msalSettings!.apiScope],
-            accounts: getAccount()
-          };
-          await instance.initialize();
-          const authenticationResult = await instance
-            .acquireTokenSilent(request as SilentRequest)
-            .catch((e: any) => {
-              console.error(e);
-            });
+    if (!globalSettings) return undefined;
 
-          return {
-            headers: {
-              Authorization: `Bearer ${authenticationResult!.accessToken}`,
-            },
-          };
-        },
-        unhandledErrorHandler: handleApiError,
-      });
-  }, [instance, globalSettings, getAccount]) 
+    return new Api({
+      baseUrl: webApiConfig.origin,
+      securityWorker: async () => {
+        if (!authToken) {
+          throw new Error("No auth token available");
+        }
+        return {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        };
+      },
+      unhandledErrorHandler: handleApiError,
+    });
+  }, [globalSettings, authToken]);
+
+  const closeConn = useCallback(() => {
+    const conn = connRef.current;
+    if (conn) {
+      conn.off("StreamState", setStreamState);
+      conn.stop().catch(console.error);
+      connRef.current = undefined;
+    }
+  }, [setStreamState]);
+
+  useEffect(() => {
+    api?.broadcastGetStreamState().then((res) => setStreamState(res.data));
+
+    const signalRHubUri = webApiConfig.origin + "/hub/status";
+    const newConn: HubConnection = new HubConnectionBuilder()
+      .withUrl(signalRHubUri, {
+        accessTokenFactory: async () => (await getApiBearer())!,
+      })
+      .withAutomaticReconnect()
+      .configureLogging(LogLevel.Warning)
+      .build();
+
+    connRef.current = newConn;
+
+    newConn
+      .start()
+      .then(() => {
+        newConn.on("StreamState", setStreamState);
+      })
+      .catch((e) =>
+        console.error("SignalR Connection in SessionContext failed: ", e),
+      );
+
+    return () => {
+      closeConn();
+    };
+  }, []);
 
   const Wrapper = messageWrapper ?? React.Fragment;
 
@@ -127,7 +171,7 @@ export function SessionProvider({
           <em>Getting ready...</em>
         </Wrapper>
       ) : (
-        <SessionContext.Provider value={{ api, getApiBearer }}>
+        <SessionContext.Provider value={{ api, getApiBearer, streamState }}>
           <Modal
             show={showApiError}
             onHide={handleErrorModalClose}

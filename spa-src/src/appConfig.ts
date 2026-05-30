@@ -1,7 +1,4 @@
-import {
-  GlobalSettingsModel,
-  MsalSettingsModel,
-} from "./apiClient/data-contracts";
+import { GlobalSettingsModel } from "./apiClient/data-contracts";
 
 export const msalConfig = {
   auth: {
@@ -22,14 +19,10 @@ export const loginRequest = {
 };
 
 export const webApiConfig = {
-  origin: import.meta.env.DEV
-    ? import.meta.env.VITE_API_ORIGIN && import.meta.env.VITE_API_ORIGIN != ""
-      ? import.meta.env.VITE_API_ORIGIN
-      : "http://localhost:5034"
-    : "",
+  origin: "",
 };
 
 export const defaultGlobalSettings: GlobalSettingsModel = {
   applicationMode: "Development",
-  msalSettings: {} as MsalSettingsModel,
+  googleClientId: "",
 };

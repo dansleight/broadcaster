@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -19,18 +19,21 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Google.Apis.Auth" Version="1.74.0" />
+        <PackageReference Include="Google.Apis.YouTube.v3" Version="1.74.0.4137" />
         <PackageReference Include="Lamar" Version="15.0.1" />
         <PackageReference Include="Lamar.Microsoft.DependencyInjection" Version="15.0.1" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.1" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
-        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="10.0.1" />
-        <PackageReference Include="Microsoft.Graph" Version="5.99.0" />
-        <PackageReference Include="Microsoft.Identity.Client" Version="4.83.3" />
-        <PackageReference Include="Microsoft.Identity.Web" Version="4.2.0" />
-        <PackageReference Include="Microsoft.Identity.Web.GraphServiceClient" Version="4.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.8" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Graph" Version="6.1.0" />
+        <PackageReference Include="Microsoft.Identity.Client" Version="4.84.1" />
+        <PackageReference Include="Microsoft.Identity.Web" Version="4.10.0" />
+        <PackageReference Include="Microsoft.Identity.Web.GraphServiceClient" Version="4.10.0" />
         <PackageReference Include="NameGenerator" Version="2.0.4" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-        <PackageReference Include="Serilog" Version="4.3.0" />
+        <PackageReference Include="Serilog" Version="4.3.1" />
         <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
         <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
         <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
@@ -43,15 +46,17 @@
         <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.EventLog" Version="4.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-        <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="9.0.2" />
+        <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="9.0.3" />
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="10.1.0" />
-        <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="10.1.7" />
+        <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.18.0" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="../Broadcaster.Business/Broadcaster.Business.csproj" />
+        <ProjectReference Include="../Broadcaster.Common/Broadcaster.Common.csproj" />
         <ProjectReference Include="../Broadcaster.Stream/Broadcaster.Stream.csproj" />
     </ItemGroup>
 
@@ -59,6 +64,11 @@
         <Content Include="$(SpaRoot)/**/*.*">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Controllers/Auth/" />
+      <Folder Include="Enums/" />
     </ItemGroup>
 
 </Project>

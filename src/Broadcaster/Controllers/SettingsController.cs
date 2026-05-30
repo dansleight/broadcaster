@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Broadcaster.SpaModels;
+using Broadcaster.Business;
+using Broadcaster.Stream;
 
 namespace Broadcaster.Controllers;
 
@@ -9,13 +11,16 @@ public class SettingsController : ControllerBase
 {
     private readonly ILogger<SettingsController> _logger;
     private readonly IConfiguration _configuration;
+    private readonly StreamManager _manager;
 
     public SettingsController(
         ILogger<SettingsController> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        StreamManager manager)
     {
         _logger = logger;
         _configuration = configuration;
+        _manager = manager;
     }
 
     /// <summary>

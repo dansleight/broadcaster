@@ -4,10 +4,14 @@ import { Logo } from "./Logo";
 import { WaitBar } from "./Loader";
 
 export type LoadingWrapperProps = {
+  waiting?: boolean;
   children: ReactNode;
 };
 
-export const LoadingWrapper = ({ children }: LoadingWrapperProps) => {
+export const LoadingWrapper = ({
+  waiting = true,
+  children,
+}: LoadingWrapperProps) => {
   return (
     <div className="bg-primary text-bg-primary" style={{ height: "100vh" }}>
       <Container
@@ -22,7 +26,7 @@ export const LoadingWrapper = ({ children }: LoadingWrapperProps) => {
             <Card className="bg-dark text-bg-dark">
               <Card.Body className="py-5 text-center">
                 {children}
-                <WaitBar />
+                {waiting && <WaitBar />}
               </Card.Body>
             </Card>
           </Col>

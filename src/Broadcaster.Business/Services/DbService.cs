@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Broadcaster.Business.Models.Config;
 using Broadcaster.Business.Models;
 using Microsoft.Extensions.Configuration;
+using Broadcaster.Common;
 
 namespace Broadcaster.Business;
 
@@ -15,9 +16,9 @@ public class DbService
     private static bool _initChecked = false;
     private static object _lock = new object();
 
-    public DbService(IConfiguration config)
+    public DbService(IConfiguration config, ArtifactHelper artifactHelper)
     {
-        _connectionString = $"Data Source={GetDatabasePath(config)}";
+        _connectionString = $"Data Source={artifactHelper.DatabasePath}";
         _connection = new SqliteConnection(_connectionString);
 
         lock (_lock)
@@ -30,11 +31,14 @@ public class DbService
                 WHERE type = 'table' 
                 """;
 
+                _connection.Open();
+
                 List<string> tables = _connection.Query<string>(checkExistsSql).ToList();
 
                 if (!tables.Contains("lu_Unit")) _connection.Execute(UnitObject.InitSql);
                 if (!tables.Contains("dat_Placeholder")) _connection.Execute(PlaceholderObject.InitSql);
                 if (!tables.Contains("dat_User")) _connection.Execute(UserObject.InitSql);
+                if (!tables.Contains("dat_RefreshToken")) _connection.Execute(RefreshTokenObject.InitSql);
                 _initChecked = true;
             }
         }
@@ -42,28 +46,4 @@ public class DbService
 
     public SqliteConnection Conn => _connection;
 
-
-    #region Helpers
-
-    internal static string GetDatabasePath(IConfiguration config)
-    {
-        // Production / systemd path
-        var path = config.GetSection("Database:Path").Value;
-
-        // Development override (optional but nice)
-        if (string.IsNullOrEmpty(path) &&
-            config.GetSection("Database:UseDevelopmentPath").Value == "False")
-        {
-            path = Path.Combine("/var/lib/broadcaster", "broadcaster.db");
-        }
-
-        // Fallback if still empty (never fails)
-        path ??= Path.Combine(AppContext.BaseDirectory, "data", "broadcaster.db");
-
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!); // safety net
-
-        return path;
-    }
-
-    #endregion
 }

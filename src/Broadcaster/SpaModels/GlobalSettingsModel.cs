@@ -5,7 +5,7 @@ public class GlobalSettingsModel
     #region Properties
 
     public string ApplicationMode { get; }
-    public MsalSettingsModel? MsalSettings { get; }
+    public string GoogleClientId { get; }
 
     #endregion
 
@@ -14,7 +14,7 @@ public class GlobalSettingsModel
     public GlobalSettingsModel(string applicationMode, IConfiguration configuration)
     {
         ApplicationMode = applicationMode;
-        MsalSettings = MsalSettingsModel.GetMsalSettings(configuration);
+        GoogleClientId = "1054831369991-80knpnri346p8gvb9qv2bna1iqkaq52a.apps.googleusercontent.com";
     }
 
     #endregion

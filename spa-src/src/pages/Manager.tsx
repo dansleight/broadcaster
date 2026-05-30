@@ -1,46 +1,42 @@
-import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
+import { Button, Card, Col, Container, Row } from "react-bootstrap";
 import { Headcrumb } from "../components/Headcrumb";
 import { useSessionContext } from "../contexts/UseContexts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import classNames from "classnames";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  PlaceholderObject,
-  StreamStatusModel,
+  faBreadSlice,
+  faDoorClosed,
+  faImage,
+  faPlay,
+  faSpinner,
+  IconDefinition,
+} from "@fortawesome/free-solid-svg-icons";
+import {
+  PlaceholderType,
+  SetPlaceholderModel,
+  StreamState,
 } from "../apiClient/data-contracts";
-import {
-  HubConnection,
-  HubConnectionBuilder,
-  LogLevel,
-} from "@microsoft/signalr";
-import { webApiConfig } from "../appConfig";
+
+enum MeetingStatus {
+  Pre = "Pre",
+  Live = "Live",
+  Sacrament = "Sacrament",
+  Post = "Post",
+  Stopped = "Stopped",
+}
 
 export function Manager() {
-  const { api, getApiBearer } = useSessionContext();
+  const { api, streamState } = useSessionContext();
   const [stateChanging, setStateChanging] = useState<boolean>(false);
-  const [status, setStatus] = useState<StreamStatusModel | undefined>(
-    undefined,
-  );
-  const [unit, setUnit] = useState<string | undefined>(undefined);
-  const [placeholderId, setPlaceholderId] = useState<number | undefined>(
-    undefined,
-  );
-  const [audioTrackId, setAudioTrackId] = useState<number | undefined>(
-    undefined,
-  );
 
-  const [placeholders, setPlaceholders] = useState<PlaceholderObject[]>([]);
-
-  const connRef = useRef<HubConnection | undefined>(undefined);
-
-  const handleSetPlaceholder = () => {
+  const setPlaceholder = (placeholderType: PlaceholderType) => {
     setStateChanging(true);
     api
       .broadcastSetPlaceholder({
-        placeholderId: placeholderId!,
-        audioTrackId: 0,
-      })
-      .then((res) => {
-        console.log(res);
-      })
+        placeholderType: placeholderType,
+      } as SetPlaceholderModel)
+      .then((res) => console.log(res))
       .finally(() => setStateChanging(false));
   };
 
@@ -64,175 +60,131 @@ export function Manager() {
       .finally(() => setStateChanging(false));
   };
 
-  const closeConn = useCallback(() => {
-    const conn = connRef.current;
-    if (conn) {
-      conn.off("Status", setStatus);
-      conn.stop().catch(console.error);
-      connRef.current = undefined;
+  const status: MeetingStatus = useMemo(() => {
+    if (streamState.streamState == StreamState.Live) {
+      console.log(
+        `streamState.streamState is ${streamState.streamState}, setting to MeetingStatus.Live`,
+      );
+      return MeetingStatus.Live;
     }
-  }, [setStatus]);
-
-  useEffect(() => {
-    api.infoGetPlaceholders().then((res) => {
-      setPlaceholders(res.data);
-    });
-
-    const signalRHubUri = webApiConfig.origin + "/hub/status";
-    const newConn: HubConnection = new HubConnectionBuilder()
-      .withUrl(signalRHubUri, {
-        accessTokenFactory: async () => (await getApiBearer())!,
-      })
-      .withAutomaticReconnect()
-      .configureLogging(LogLevel.Warning)
-      .build();
-
-    connRef.current = newConn;
-
-    newConn
-      .start()
-      .then(() => {
-        newConn.on("Status", setStatus);
-      })
-      .catch((e) => console.error("SignalR Connection failed: ", e));
-
-    return () => {
-      closeConn();
-    };
-  }, []);
-
-  const units = useMemo(() => {
-    if (!placeholders || placeholders.length === 0) {
-      return undefined;
+    if (streamState.placeholderImage?.includes("pre") ?? false) {
+      console.log(
+        `streamState.streamState is ${streamState.streamState}, streamstate.placeholderImage is ${streamState.placeholderImage}. Setting to MeetingStatus.Pre`,
+      );
+      return MeetingStatus.Pre;
+    }
+    if (streamState.placeholderImage?.includes("sacrament") ?? false) {
+      console.log(
+        `streamState.streamState is ${streamState.streamState}, streamstate.placeholderImage is ${streamState.placeholderImage}. Setting to MeetingStatus.Sacrament`,
+      );
+      return MeetingStatus.Sacrament;
     }
 
-    const uniqueUnits = [...new Set(placeholders.map((x) => x.unit))];
-
-    return uniqueUnits.sort((a, b) => {
-      // null comes first
-      if (a === null) return -1;
-      if (b === null) return 1;
-
-      // Both are strings → sort alphabetically (case-insensitive)
-      return (a ?? "").localeCompare(b ?? "");
-    });
-  }, [placeholders]);
-
-  const images = useMemo(() => {
-    return placeholders.filter((p) => p.unit == unit);
-  }, [placeholders, unit]);
-
-  useEffect(() => {
-    if (!images || images.length === 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPlaceholderId(undefined);
-      return;
+    if (streamState.placeholderImage?.includes("post") ?? false) {
+      console.log(
+        `streamState.streamState is ${streamState.streamState}, streamstate.placeholderImage is ${streamState.placeholderImage}. Setting to MeetingStatus.Post`,
+      );
+      return MeetingStatus.Post;
     }
-
-    const currentIsValid = images.some(
-      (p) => p.placeholderId === placeholderId,
-    );
-
-    if (!currentIsValid) {
-      setPlaceholderId(images[0].placeholderId);
-    }
-  }, [images]);
+    return MeetingStatus.Stopped;
+  }, [streamState]);
 
   return (
     <Container fluid>
       <Headcrumb title="Broadcast Manager" />
-      <Row>
+      {/* <Row>
         <Col className="text-center">
-          <div
-            style={{ maxWidth: "640px" }}
-            className="m-2 border border-primary"
-          >
-            {status && (
+          <div className="m-2 border border-primary">
+            {status ? (
               <>
-                <h1>{status.status}</h1>
+                <h1>{status.toString() ?? "unknown"}</h1>
               </>
+            ) : (
+              <h1>No Status</h1>
             )}
           </div>
         </Col>
-      </Row>
+      </Row> */}
       <Row>
         <Col>
-          <Card>
-            <Card.Header className="d-flex justify-content-between">
-              <Card.Title>Placeholder</Card.Title>
+          <Card
+            className={
+              status == MeetingStatus.Stopped ? "bg-danger-subtle mb-2" : "mb-2"
+            }
+          >
+            <Card.Body className="d-grid gap-2">
               <Button
-                size="sm"
-                onClick={handleSetPlaceholder}
-                variant="primary"
-                disabled={stateChanging}
+                variant="danger"
+                className="me-2"
+                onClick={handleStopAll}
+                size="lg"
+                disabled={status == MeetingStatus.Stopped}
               >
-                Set Placeholder
+                {status == MeetingStatus.Stopped ? "Stopped" : "Stop"}
               </Button>
-            </Card.Header>
-            <Card.Body>
-              <Form.Group className="mb-2">
-                <Form.Label>Unit</Form.Label>
-                {units && units.length > 1 ? (
-                  <>
-                    <Form.Select
-                      value={unit}
-                      onChange={(e) =>
-                        setUnit(
-                          e.target.value != "" ? e.target.value : undefined,
-                        )
-                      }
-                      aria-label="Select Unit"
-                    >
-                      {units.map((u, i) => (
-                        <option key={i} value={u ?? ""}>
-                          {u ?? "- generic -"}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </>
-                ) : units && units.length == 1 ? (
-                  <>
-                    <Form.Control disabled value={unit} />
-                  </>
-                ) : (
-                  <em>No available units.</em>
-                )}
-              </Form.Group>
-              <Form.Group className="mb-2">
-                <Form.Label>Image</Form.Label>
-                <Form.Select
-                  value={placeholderId}
-                  onChange={(e) => setPlaceholderId(+e.target.value)}
-                  aria-label="Select Placeholder Image"
-                >
-                  {images.map((p, i) => (
-                    <option key={i} value={p.placeholderId}>
-                      {p.name}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-              <Form.Group className="mb-2">
-                <Form.Label>Music</Form.Label>
-                <Form.Select aria-label="Select Placeholder Music">
-                  <option value={1}>Pre-Meeting</option>
-                  <option value={2}>Ordinance</option>
-                  <option value={3}>Post-Meeting</option>
-                </Form.Select>
-              </Form.Group>
             </Card.Body>
           </Card>
         </Col>
       </Row>
       <Row>
+        <Col xs={12} sm={6} md={4} lg={3}>
+          <BCard
+            active={status == MeetingStatus.Pre}
+            label="Pre-Meeting"
+            icon={faImage}
+            action={() => setPlaceholder(PlaceholderType.Pre)}
+            src="/api/image/pre.jpg"
+            stateChanging={stateChanging}
+          />
+        </Col>
+        <Col xs={12} sm={6} md={4} lg={3}>
+          <BCard
+            active={status == MeetingStatus.Live}
+            label="Go Live"
+            icon={faPlay}
+            action={handleGoLive}
+            buttonLabel="Go Live"
+            src="/api/image/stream.jpg"
+            stateChanging={stateChanging}
+          />
+        </Col>
+        <Col xs={12} sm={6} md={4} lg={3}>
+          <BCard
+            active={status == MeetingStatus.Sacrament}
+            label="Sacrament"
+            icon={faBreadSlice}
+            action={() => setPlaceholder(PlaceholderType.Sacrament)}
+            src="/api/image/sacrament.jpg"
+            stateChanging={stateChanging}
+          />
+        </Col>
+        <Col xs={12} sm={6} md={4} lg={3}>
+          <BCard
+            active={status == MeetingStatus.Post}
+            label="Post-Meeting"
+            icon={faDoorClosed}
+            action={() => setPlaceholder(PlaceholderType.Post)}
+            src="/api/image/post.jpg"
+            stateChanging={stateChanging}
+          />
+        </Col>
+      </Row>
+      <Row>
         <Col>
-          <Card>
-            <Card.Body>
-              <Button variant="success" className="me-2" onClick={handleGoLive}>
-                Go Live
-              </Button>
-              <Button variant="danger" className="me-2" onClick={handleStopAll}>
-                Stop
+          <Card
+            className={
+              status == MeetingStatus.Stopped ? "bg-danger-subtle" : ""
+            }
+          >
+            <Card.Body className="d-grid gap-2">
+              <Button
+                variant="danger"
+                className="me-2"
+                onClick={handleStopAll}
+                size="lg"
+                disabled={status == MeetingStatus.Stopped}
+              >
+                {status == MeetingStatus.Stopped ? "Stopped" : "Stop"}
               </Button>
             </Card.Body>
           </Card>
@@ -241,3 +193,64 @@ export function Manager() {
     </Container>
   );
 }
+
+type BCardArgs = {
+  active: boolean;
+  label: string;
+  icon: IconDefinition;
+  action: () => void;
+  buttonLabel?: string;
+  src: string;
+  stateChanging: boolean;
+};
+
+const BCard = ({
+  active,
+  label,
+  icon,
+  action,
+  src,
+  stateChanging,
+}: BCardArgs) => {
+  return (
+    <Card
+      className={classNames("mb-2", {
+        "card-secondary": !active,
+        "card-primary": active,
+      })}
+      onClick={action}
+    >
+      <Card.Body
+        className={classNames("", {
+          "bg-success text-bg-success": active,
+          "bg-secondary text-bg-secondary": !active,
+        })}
+      >
+        <div className="d-flex justify-content-between">
+          <h5>{label}</h5>
+          <span>
+            {active && stateChanging ? (
+              <FontAwesomeIcon icon={faSpinner} spin />
+            ) : (
+              <FontAwesomeIcon icon={icon} beat={active} size="lg" />
+            )}
+          </span>
+        </div>
+        <img
+          src={src}
+          alt={label}
+          style={
+            active
+              ? { width: "100%", border: "1px solid #ccc" }
+              : {
+                  width: "100%",
+                  border: "1px solid #ccc",
+                  filter: "brightness(1.35) saturate(0.7)", // Lighten + slight desaturation
+                  opacity: 0.65, // Optional subtle fade
+                }
+          }
+        />
+      </Card.Body>
+    </Card>
+  );
+};

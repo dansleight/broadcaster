@@ -23,11 +23,12 @@ public class RoleMapping
 
         if (email == null) throw new UnauthorizedAccessException("No usable email claim provided by Identity Provider");
 
-        UserObject user = UserStaticRepo.GetUserForAuth(configuration, email, name);
-        List<string> rolesAndUnits = user.Roles.Select(r => r.ToString()).ToList();
-        rolesAndUnits.AddRange(user.Units);
+        // UserObject user = UserStaticRepo.GetUserForAuth(configuration, email, name);
+        // List<string> rolesAndUnits = user.Roles.Select(r => r.ToString()).ToList();
+        // rolesAndUnits.AddRange(user.Units);
 
-        return rolesAndUnits;
+        // return rolesAndUnits;
+        return [];
     }
 
     #endregion

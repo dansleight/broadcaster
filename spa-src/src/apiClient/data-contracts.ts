@@ -16,14 +16,42 @@ export enum UserRole {
   User = "User",
 }
 
+export enum StreamState {
+  Idle = "Idle",
+  Live = "Live",
+  Placeholder = "Placeholder",
+}
+
+export enum PlaceholderType {
+  Pre = "Pre",
+  Sacrament = "Sacrament",
+  Post = "Post",
+}
+
+export enum MusicType {
+  Default = "Default",
+  Sacrament = "Sacrament",
+}
+
+export interface AuthTokenResponse {
+  accessToken: string;
+  user: UserObject;
+}
+
 export interface BadRequestModel {
   message: string;
   userMessage: string | null;
 }
 
+export interface FullStreamState {
+  streamState: StreamState;
+  placeholderImage: string | null;
+  placeholderMusic: string | null;
+}
+
 export interface GlobalSettingsModel {
   applicationMode: string;
-  msalSettings: MsalSettingsModel | null;
+  googleClientId: string;
 }
 
 export interface GoodModel {
@@ -32,11 +60,9 @@ export interface GoodModel {
   name: string;
 }
 
-export interface MsalSettingsModel {
-  clientId: string;
-  authority: string;
-  apiScope: string;
-  provider: string | null;
+export interface GoogleCallbackRequest {
+  /** @minLength 1 */
+  code: string;
 }
 
 export interface PlaceholderObject {
@@ -47,19 +73,25 @@ export interface PlaceholderObject {
 }
 
 export interface SetPlaceholderModel {
-  /** @format int32 */
-  placeholderId: number;
-  /** @format int32 */
-  audioTrackId: number;
+  placeholderType: PlaceholderType;
+  musicType: MusicType;
 }
 
 export interface StreamStatusModel {
   status: string;
 }
 
+export interface TokenModel {
+  token: string;
+}
+
 export interface UserObject {
+  googleSub: string;
   email: string;
   name: string;
+  givenName: string | null;
+  familyName: string | null;
+  picture: string | null;
   units: string[];
   roles: UserRole[];
 }

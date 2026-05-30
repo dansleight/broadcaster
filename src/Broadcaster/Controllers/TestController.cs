@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Broadcaster.SpaModels;
+using Broadcaster.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Broadcaster.Controllers;
 
@@ -11,6 +13,14 @@ namespace Broadcaster.Controllers;
 [ApiController]
 public class TestController : ControllerBase
 {
+    private readonly ILogger<TestController> _logger;
+    private readonly IHubContext<StatusHub> _hubContext;
+
+    public TestController(ILogger<TestController> logger, IHubContext<StatusHub> hubContext)
+    {
+        _logger = logger;
+        _hubContext = hubContext;
+    }
 
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(GoodModel), 200)]
@@ -36,6 +46,14 @@ public class TestController : ControllerBase
         {
             return StatusCode(500, ex);
         }
+    }
+
+    [HttpGet("notify/{message}")]
+    [ProducesResponseType(typeof(bool), 200)]
+    public async Task<ActionResult> Notify(string message)
+    {
+        await _hubContext.Clients.All.SendAsync("message", message);
+        return Ok(true);
     }
 
 }
