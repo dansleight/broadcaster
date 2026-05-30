@@ -48,6 +48,8 @@ export const IdentityProvider = ({
     }
   };
 
+  console.info("webApiConfig.redirectUri: ", webApiConfig.redirectUri);
+
   const login = useGoogleLogin({
     flow: "auth-code",
     scope: "openid email profile https://www.googleapis.com/auth/youtube",
