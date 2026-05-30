@@ -27,6 +27,13 @@ public class GoogleYouTubeTokenService
 
     public async Task<(TokenResponse TokenResponse, GoogleJsonWebSignature.Payload UserPayload)> ExchangeCodeAsync(string code)
     {
+        Console.WriteLine("=== DEBUG: Redirect URI being sent to Google ===");
+        Console.WriteLine($"Redirect URI: '{_redirectUri}'");
+        Console.WriteLine($"Length: {_redirectUri.Length}");
+        Console.WriteLine($"ClientId: {_clientSecrets.ClientId}");
+        Console.WriteLine($"ClientSecret: {_clientSecrets.ClientSecret}");
+        Console.WriteLine("============================================");
+
         var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
         {
             ClientSecrets = _clientSecrets,
