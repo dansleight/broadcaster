@@ -6,6 +6,7 @@ public class GlobalSettingsModel
 
     public string ApplicationMode { get; }
     public string GoogleClientId { get; }
+    public string RedirectUri { get; }
 
     #endregion
 
@@ -15,6 +16,7 @@ public class GlobalSettingsModel
     {
         ApplicationMode = applicationMode;
         GoogleClientId = "1054831369991-80knpnri346p8gvb9qv2bna1iqkaq52a.apps.googleusercontent.com";
+        RedirectUri = configuration["Google:RedirectUri"]!;
     }
 
     #endregion
