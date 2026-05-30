@@ -149,20 +149,6 @@ export class Api<
   /**
    * No description
    *
-   * @tags GoogleAuth
-   * @name GoogleAuthFixer
-   * @request GET:/api/auth/google/fixer
-   */
-  googleAuthFixer = (params: RequestParams = {}) =>
-    this.request<boolean, any>({
-      path: `/api/auth/google/fixer`,
-      method: "GET",
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
    * @tags Image
    * @name ImageImage
    * @request GET:/api/image/{imageName}

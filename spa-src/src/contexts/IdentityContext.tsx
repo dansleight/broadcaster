@@ -11,7 +11,6 @@ import { UserObject } from "../apiClient/data-contracts";
 import { Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faG } from "@fortawesome/free-solid-svg-icons";
-import { webApiConfig } from "../appConfig";
 
 type IdentityProviderProps = {
   children: ReactNode;
@@ -22,7 +21,7 @@ export const IdentityProvider = ({
   children,
   messageWrapper,
 }: IdentityProviderProps) => {
-  const { noAuthApi } = useSettingsContext();
+  const { noAuthApi, globalSettings } = useSettingsContext();
   const [waiting, setWaiting] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const effectCalled = useRef(false);
@@ -48,14 +47,14 @@ export const IdentityProvider = ({
     }
   };
 
-  console.info("webApiConfig.redirectUri: ", webApiConfig.redirectUri);
+  console.info("globalSettings.redirectUri: ", globalSettings.redirectUri);
 
   const login = useGoogleLogin({
     flow: "auth-code",
     scope: "openid email profile https://www.googleapis.com/auth/youtube",
     ux_mode: "popup", // "popup" is usually smoother; change to "redirect" if you prefer
     onSuccess: handleLoginSuccess, // Pass the function directly
-    redirect_uri: webApiConfig.redirectUri,
+    redirect_uri: globalSettings.redirectUri,
     onError: (error) => {
       console.error("Google login error:", error);
     },

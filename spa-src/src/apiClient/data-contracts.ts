@@ -52,6 +52,7 @@ export interface FullStreamState {
 export interface GlobalSettingsModel {
   applicationMode: string;
   googleClientId: string;
+  redirectUri: string;
 }
 
 export interface GoodModel {
@@ -74,7 +75,7 @@ export interface PlaceholderObject {
 
 export interface SetPlaceholderModel {
   placeholderType: PlaceholderType;
-  musicType: MusicType;
+  musicType: MusicType | null;
 }
 
 export interface StreamStatusModel {

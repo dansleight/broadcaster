@@ -20,13 +20,10 @@ export const loginRequest = {
 
 export const webApiConfig = {
   origin: "",
-  redirectUri:
-    import.meta.env.VITE_REDIRECT_URI && import.meta.env.VITE_REDIRECT_URI != ""
-      ? import.meta.env.VITE_REDIRECT_URI
-      : "http://localhost:3034",
 };
 
 export const defaultGlobalSettings: GlobalSettingsModel = {
   applicationMode: "Development",
   googleClientId: "",
+  redirectUri: "",
 };
