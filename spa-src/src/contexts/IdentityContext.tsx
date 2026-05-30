@@ -11,6 +11,7 @@ import { UserObject } from "../apiClient/data-contracts";
 import { Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faG } from "@fortawesome/free-solid-svg-icons";
+import { webApiConfig } from "../appConfig";
 
 type IdentityProviderProps = {
   children: ReactNode;
@@ -52,7 +53,7 @@ export const IdentityProvider = ({
     scope: "openid email profile https://www.googleapis.com/auth/youtube",
     ux_mode: "popup", // "popup" is usually smoother; change to "redirect" if you prefer
     onSuccess: handleLoginSuccess, // Pass the function directly
-    redirect_uri: "http://localhost:3034",
+    redirect_uri: webApiConfig.redirectUri,
     onError: (error) => {
       console.error("Google login error:", error);
     },
