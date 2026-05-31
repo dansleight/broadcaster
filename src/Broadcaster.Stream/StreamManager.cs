@@ -286,6 +286,8 @@ public class StreamManager : IAsyncDisposable
         if (vidRes.ExitCode != 0)
             throw new Exception($"v4l2-ctl failed with exit code {vidRes.ExitCode}\nError: {vidErr}");
 
+        Console.WriteLine(vidOutput);
+
         var vidMatch = Regex.Match(vidOutput,
             @"^USB.*Video:[\s\S]*?(/dev/video\d+)",
             RegexOptions.Multiline);
@@ -308,6 +310,8 @@ public class StreamManager : IAsyncDisposable
 
         if (audRes.ExitCode != 0)
             throw new Exception($"arecord failed with exit code {audRes.ExitCode}\nError: {audErr}");
+
+        Console.WriteLine(audOutput);
 
         var audMatch = Regex.Match(audOutput,
             @"^card\s+(\d+):.*USB.*Video",
