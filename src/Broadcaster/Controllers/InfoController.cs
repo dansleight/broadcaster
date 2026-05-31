@@ -1,7 +1,9 @@
 using Broadcaster.Business;
 using Broadcaster.Classes;
+using Broadcaster.Stream;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Graph.Models;
 
 namespace Broadcaster.Controllers;
 
@@ -14,18 +16,21 @@ public class InfoController : ControllerBase
     private readonly UserService _userService;
     private readonly UnitService _unitService;
     private readonly PlaceholderService _placeholderService;
+    private readonly StreamManager _streamManager;
 
     public InfoController(
         ILogger<InfoController> logger,
         UserService userService,
         UnitService unitService,
-        PlaceholderService placeholderService
+        PlaceholderService placeholderService,
+        StreamManager streamManager
     )
     {
         _logger = logger;
         _userService = userService;
         _unitService = unitService;
         _placeholderService = placeholderService;
+        _streamManager = streamManager;
     }
 
     [HttpGet("User")]
@@ -95,6 +100,46 @@ public class InfoController : ControllerBase
             _logger.LogError(ex, "");
             return StatusCode(500, ex.Message);
         }
+    }
+
+    [HttpGet("triggerdevicedetection")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(bool), 200)]
+    public async Task<ActionResult> TriggerDeviceDetection()
+    {
+        await _streamManager.DetermineDevicesAsync();
+        return Ok(true);
+    }
+
+    [HttpGet("videodeviceid")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(string), 200)]
+    public ActionResult VideoDeviceId()
+    {
+        return Ok(_streamManager.getVideoDeviceId());
+    }
+
+    [HttpPost("videodeviceid")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(bool), 200)]
+    public ActionResult SetVideoDeviceId(string videoDeviceId)
+    {
+        _streamManager.SetVideoDeviceId(videoDeviceId);
+        return Ok(true);
+    }
+
+    [HttpGet("audiodeviceid")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(string), 200)]
+    public ActionResult AudioDeviceId() => Ok(_streamManager.GetAudioDeviceId());
+
+    [HttpPost("audiodeviceid")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(bool), 200)]
+    public ActionResult SetAudioDeviceId(string audioDeviceId)
+    {
+        _streamManager.SetAudioDeviceId(audioDeviceId);
+        return Ok(true);
     }
 
     #region Helpers

@@ -152,6 +152,20 @@ public class StreamManager : IAsyncDisposable
         _lock.Dispose();
     }
 
+    public string? GetAudioDeviceId() => _audioDeviceId;
+
+    public void SetAudioDeviceId(string audioDeviceId)
+    {
+        _audioDeviceId = audioDeviceId;
+    }
+
+    public string? getVideoDeviceId() => _videoDeviceId;
+
+    public void SetVideoDeviceId(string videoDeviceId)
+    {
+        _videoDeviceId = videoDeviceId;
+    }
+
     #endregion
 
     #region Private Helpers
@@ -270,7 +284,7 @@ public class StreamManager : IAsyncDisposable
         try { File.Delete(_pidFile); } catch { }
     }
 
-    private async Task DetermineDevicesAsync()
+    public async Task DetermineDevicesAsync()
     {
         // make sure to install the tools: 
         // $ sudo apt install v4l-utils alsa-utils ffmpeg
@@ -286,7 +300,7 @@ public class StreamManager : IAsyncDisposable
         if (vidRes.ExitCode != 0)
             throw new Exception($"v4l2-ctl failed with exit code {vidRes.ExitCode}\nError: {vidErr}");
 
-        Console.WriteLine(vidOutput);
+        _logger.LogInformation(vidOutput);
 
         var vidMatch = Regex.Match(vidOutput,
             @"^USB.*Video:[\s\S]*?(/dev/video\d+)",
@@ -311,7 +325,7 @@ public class StreamManager : IAsyncDisposable
         if (audRes.ExitCode != 0)
             throw new Exception($"arecord failed with exit code {audRes.ExitCode}\nError: {audErr}");
 
-        Console.WriteLine(audOutput);
+        _logger.LogInformation(audOutput);
 
         var audMatch = Regex.Match(audOutput,
             @"^card\s+(\d+):.*USB.*Video",

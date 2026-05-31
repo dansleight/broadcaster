@@ -80,14 +80,4 @@ public class BroadcastController : ControllerBase
         await _manager.StopAsync();
         return Ok(new StreamStatusModel("tried to end the broadcast"));
     }
-
-    [HttpGet("schedule-dummy")]
-    [ProducesResponseType(typeof(StreamStatusModel), 200)]
-    public async Task<ActionResult> ScheduleMeetings()
-    {
-        return Ok(new StreamStatusModel("nothing to schedule"));
-    }
-
-
-
 }
