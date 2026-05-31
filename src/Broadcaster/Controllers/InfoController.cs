@@ -103,7 +103,6 @@ public class InfoController : ControllerBase
     }
 
     [HttpGet("triggerdevicedetection")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<ActionResult> TriggerDeviceDetection()
     {
@@ -112,7 +111,6 @@ public class InfoController : ControllerBase
     }
 
     [HttpGet("videodeviceid")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(string), 200)]
     public ActionResult VideoDeviceId()
     {
@@ -120,7 +118,6 @@ public class InfoController : ControllerBase
     }
 
     [HttpPost("videodeviceid")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(bool), 200)]
     public ActionResult SetVideoDeviceId(string videoDeviceId)
     {
@@ -129,12 +126,10 @@ public class InfoController : ControllerBase
     }
 
     [HttpGet("audiodeviceid")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(string), 200)]
     public ActionResult AudioDeviceId() => Ok(_streamManager.GetAudioDeviceId());
 
     [HttpPost("audiodeviceid")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(bool), 200)]
     public ActionResult SetAudioDeviceId(string audioDeviceId)
     {

@@ -33,6 +33,7 @@ export const Sidebar = ({ menuItems }: MenuProps) => {
 
   useEffect(() => {
     if (darkMode) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSidebarClass(layoutConfig.sidebarDarkTheme);
     } else {
       setSidebarClass(layoutConfig.sidebarTheme);
@@ -74,9 +75,7 @@ export const Sidebar = ({ menuItems }: MenuProps) => {
         <div className="sidebar-brand-icon">
           <Logo size={30} />
         </div>
-        <div className="sidebar-brand-text mx-3">
-          BWB Broadcast
-        </div>
+        <div className="sidebar-brand-text mx-3">Broadcast</div>
       </Link>
 
       {/* Divider */}

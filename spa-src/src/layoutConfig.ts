@@ -25,6 +25,6 @@ export const layoutConfig: LayoutConfig = {
   navbarTheme: NavbarTheme.Light,
   navbarDarkTheme: NavbarTheme.Dark,
 
-  defaultTitle: "BWB Broadcast",
-  titleSuffix: " - BWB Broadcast",
+  defaultTitle: "Broadcast",
+  titleSuffix: " - Broadcast",
 } as LayoutConfig;

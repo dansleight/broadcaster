@@ -22,7 +22,7 @@ export const Layout = ({
   const { sidebarToggled, setBodyAttribute } = useSettingsContext();
 
   useEffect(() => {
-    document.title = title ? "BWB Broadcast: " + title : "BWB Broadcast";
+    document.title = title ? "Broadcast: " + title : "Broadcast";
     setBodyAttribute(
       "data-navbar-include",
       layoutConfig.includeNavbar ? "true" : "false",

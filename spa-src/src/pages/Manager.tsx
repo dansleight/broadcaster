@@ -10,6 +10,7 @@ import {
   faImage,
   faPlay,
   faSpinner,
+  faStop,
   IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -107,23 +108,15 @@ export function Manager() {
       </Row> */}
       <Row>
         <Col>
-          <Card
-            className={
-              status == MeetingStatus.Stopped ? "bg-danger-subtle mb-2" : "mb-2"
-            }
-          >
-            <Card.Body className="d-grid gap-2">
-              <Button
-                variant="danger"
-                className="me-2"
-                onClick={handleStopAll}
-                size="lg"
-                disabled={status == MeetingStatus.Stopped}
-              >
-                {status == MeetingStatus.Stopped ? "Stopped" : "Stop"}
-              </Button>
-            </Card.Body>
-          </Card>
+          <Row>
+            <Col>
+              <StopButton
+                status={status}
+                handleStopAll={handleStopAll}
+                stateChanging={stateChanging}
+              />
+            </Col>
+          </Row>
         </Col>
       </Row>
       <Row>
@@ -171,28 +164,49 @@ export function Manager() {
       </Row>
       <Row>
         <Col>
-          <Card
-            className={
-              status == MeetingStatus.Stopped ? "bg-danger-subtle" : ""
-            }
-          >
-            <Card.Body className="d-grid gap-2">
-              <Button
-                variant="danger"
-                className="me-2"
-                onClick={handleStopAll}
-                size="lg"
-                disabled={status == MeetingStatus.Stopped}
-              >
-                {status == MeetingStatus.Stopped ? "Stopped" : "Stop"}
-              </Button>
-            </Card.Body>
-          </Card>
+          <StopButton
+            status={status}
+            handleStopAll={handleStopAll}
+            stateChanging={stateChanging}
+          />
         </Col>
       </Row>
     </Container>
   );
 }
+
+type StopButtonArgs = {
+  status: MeetingStatus;
+  handleStopAll: () => void;
+  stateChanging: boolean;
+};
+
+const StopButton = ({
+  status,
+  handleStopAll,
+  stateChanging,
+}: StopButtonArgs) => {
+  return (
+    <Card className={status == MeetingStatus.Stopped ? "mb-2" : "mb-2"}>
+      <Card.Body className="d-grid gap-2">
+        <Button
+          variant={status == MeetingStatus.Stopped ? "secondary" : "danger"}
+          className="me-2"
+          onClick={handleStopAll}
+          size="lg"
+          disabled={status == MeetingStatus.Stopped}
+        >
+          {status == MeetingStatus.Stopped && stateChanging ? (
+            <FontAwesomeIcon icon={faSpinner} spin />
+          ) : (
+            <FontAwesomeIcon icon={faStop} size="lg" />
+          )}
+          {status == MeetingStatus.Stopped ? "Stopped" : "Stop"}
+        </Button>
+      </Card.Body>
+    </Card>
+  );
+};
 
 type BCardArgs = {
   active: boolean;

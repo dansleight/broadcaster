@@ -9,25 +9,8 @@ export function Logo({ size }: LogoProps) {
         <path
           fill="currentColor"
           data-name="part1"
-          d="
-              M 30 0
-              L 73 0
-              L 43 100
-              L 0 100
-              z
-              M 77 10
-              L 97 10
-              L 73 90
-              L 53 90
-              z
-              M 20 42
-              L 20 58
-              L 80 55
-              L 80 45
-              z"
+          d="M96 64c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L96 64zM464 336l73.5 58.8c4.2 3.4 9.4 5.2 14.8 5.2 13.1 0 23.7-10.6 23.7-23.7l0-240.6c0-13.1-10.6-23.7-23.7-23.7-5.4 0-10.6 1.8-14.8 5.2L464 176 464 336z"
         />
-        <circle fill="currentColor" cx="13" cy="13" r="11" />
-        <circle fill="currentColor" cx="87" cy="82" r="5" />
       </g>
     </g>
   );
@@ -40,7 +23,7 @@ export function Logo({ size }: LogoProps) {
         height={size}
         data-name="layer_0"
         xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 100 100"
+        viewBox="0 0 576 512"
       >
         {parts}
       </svg>
@@ -51,7 +34,7 @@ export function Logo({ size }: LogoProps) {
       id="logo"
       data-name="layer_0"
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 100 100"
+      viewBox="0 0 576 512"
     >
       {parts}
     </svg>
